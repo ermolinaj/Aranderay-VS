@@ -2,6 +2,7 @@
 using TbsFramework.Grid;
 using TbsFramework.Grid.GridStates;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TbsFramework.Gui
 {
@@ -31,6 +32,11 @@ namespace TbsFramework.Gui
             if (Input.GetKeyDown(KeyCode.N) && !(CellGrid.CellGridState is CellGridStateBlockInput))
             {
                 CellGrid.EndTurn();//User ends his turn by pressing "n" on keyboard.
+            }
+
+            if (Input.GetKeyDown(KeyCode.L) && !(CellGrid.CellGridState is CellGridStateBlockInput) && CellGrid.NextLevelSceneName != "")
+            {
+                SceneManager.LoadScene(CellGrid.NextLevelSceneName);
             }
         }
     }
