@@ -88,6 +88,10 @@ namespace TbsFramework.Cells
         /// Method marks the cell as highlighted. It gets called when the mouse is over the cell.
         /// </summary>
         public abstract void MarkAsHighlighted();
+        ///<summary>
+        ///Method marks the cell as dangerous. It gets called when the mark zone of danger is called by the Cell Grid state, used for the scouting mechanic.
+        ///</summary>
+        public abstract void MarkAsDangerous();
         /// <summary>
         /// Method returns the cell to its base appearance.
         /// </summary>

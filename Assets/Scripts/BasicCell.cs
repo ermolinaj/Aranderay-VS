@@ -13,6 +13,11 @@ class BasicCell : Square
         GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f);
     }
 
+    public override void MarkAsDangerous()
+    {
+        GetComponent<Renderer>().material.color = Color.red;
+    }
+
     public override void MarkAsPath()
     {
         GetComponent<Renderer>().material.color = Color.green;

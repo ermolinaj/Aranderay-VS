@@ -13,6 +13,11 @@ class ObstacleCell : Square
         GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f);
     }
 
+    public override void MarkAsDangerous()
+    {
+      
+    }
+
     public override void MarkAsPath()
     {
         GetComponent<Renderer>().material.color = Color.green;

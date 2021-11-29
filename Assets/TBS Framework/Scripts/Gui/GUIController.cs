@@ -32,6 +32,10 @@ namespace TbsFramework.Gui
             {
                 CellGrid.EndTurn();//User ends his turn by pressing "n" on keyboard.
             }
+            if (Input.GetKeyDown(KeyCode.O) && !(CellGrid.CellGridState is CellGridStateBlockInput))
+            {
+                CellGrid.MarkZoneOfDanger(1);//User ends his turn by pressing "n" on keyboard.
+            }
         }
     }
 }

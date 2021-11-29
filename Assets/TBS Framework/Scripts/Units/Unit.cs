@@ -415,6 +415,30 @@ namespace TbsFramework.Units
             }
             return new HashSet<Cell>(cachedPaths.Keys);
         }
+        /// <summary>
+        /// Method returns all cells that the unit is capable of moving with full movement points.
+        /// </summary>
+        public HashSet<Cell> GetPosibleDestinations(List<Cell> cells)
+        {
+            cachedPaths = new Dictionary<Cell, List<Cell>>();
+
+            var paths = CachePaths(cells);
+            foreach (var key in paths.Keys)
+            {
+                if (!IsCellMovableTo(key))
+                {
+                    continue;
+                }
+                var path = paths[key];
+
+                var pathCost = path.Sum(c => c.MovementCost);
+                if (pathCost <= TotalMovementPoints)
+                {
+                    cachedPaths.Add(key, path);
+                }
+            }
+            return new HashSet<Cell>(cachedPaths.Keys);
+        }
 
         private Dictionary<Cell, List<Cell>> CachePaths(List<Cell> cells)
         {

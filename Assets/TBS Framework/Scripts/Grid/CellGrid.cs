@@ -226,6 +226,21 @@ namespace TbsFramework.Grid
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
+        public void MarkZoneOfDanger(int playerNumber)
+        {
+            List<Cell> cellsReachableByEnemy = new List<Cell>();
+            List<Unit> enemyUnits;
+            
+            enemyUnits = Units.FindAll(u => u.PlayerNumber.Equals(playerNumber));
+            foreach (Unit unit in enemyUnits)
+            {
+                cellsReachableByEnemy.AddRange(unit.GetPosibleDestinations(Cells));
+            }
+
+            foreach (Cell cell in cellsReachableByEnemy)
+                cell.MarkAsDangerous();
+        }
+
         public void EndGame(int playerNumber)
         {
             Debug.Log("Game Ended");
