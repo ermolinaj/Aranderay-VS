@@ -9,11 +9,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3674412085678707266}
+  - component: {fileID: 3311874973800126562}
+  - component: {fileID: 1906040485992748727}
   - component: {fileID: 3698383443155193317}
   - component: {fileID: 786818798439039363}
-  - component: {fileID: -366402265365773249}
-  - component: {fileID: -4392215977891049561}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: EnemyMeleeUnit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34,42 +34,15 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &3698383443155193317
-BoxCollider:
+--- !u!33 &3311874973800126562
+MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7788568842877540166}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &786818798439039363
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7788568842877540166}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 91b598ce987a24448a699c3610758e31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cell: {fileID: 0}
-  HitPoints: 1
-  AttackRange: 1
-  AttackFactor: 1
-  DefenceFactor: 0
-  movementPoints: 4
-  MovementAnimationSpeed: 10
-  actionPoints: 1
-  PlayerNumber: 1
-  LeadingColor: {r: 0, g: 0, b: 0, a: 0}
---- !u!23 &-366402265365773249
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &1906040485992748727
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -110,11 +83,38 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &-4392215977891049561
-MeshFilter:
+--- !u!65 &3698383443155193317
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7788568842877540166}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &786818798439039363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7788568842877540166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91b598ce987a24448a699c3610758e31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cell: {fileID: 0}
+  HitPoints: 1
+  AttackRange: 1
+  AttackFactor: 1
+  DefenceFactor: 0
+  movementPoints: 4
+  MovementAnimationSpeed: 10
+  actionPoints: 1
+  PlayerNumber: 1
+  LeadingColor: {r: 0, g: 0, b: 0, a: 0}
