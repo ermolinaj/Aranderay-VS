@@ -73,11 +73,16 @@ namespace TbsFramework.Grid
         /// </summary>
         public Transform PlayersParent;
 
+        [SerializeField]
+        public string NextLevelSceneName;
+
         public bool GameFinished { get; private set; }
         public List<Player> Players { get; private set; }
         public List<Cell> Cells { get; private set; }
         public List<Unit> Units { get; private set; }
         public Text GameFinishedMessage { get; private set; }
+        
+
 
         private void Start()
         {
