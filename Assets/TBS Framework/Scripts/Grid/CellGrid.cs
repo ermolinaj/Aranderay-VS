@@ -231,6 +231,11 @@ namespace TbsFramework.Grid
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
+        public void LoadNextLevel()
+        {
+            SceneManager.LoadScene(NextLevelSceneName);
+        }
+
         public void MarkZoneOfDanger(int playerNumber)
         {
             List<Cell> cellsReachableByEnemy = new List<Cell>();
@@ -252,7 +257,13 @@ namespace TbsFramework.Grid
             Text winConText = GameObject.Find("GUICamera/Canvas/GameFinishedMessage").GetComponent<Text>();
 
             if (playerNumber == 0)
-                winConText.text = "You Won!";
+            {
+                if (NextLevelSceneName == "")
+                    winConText.text = "You Won!";
+                else
+                    LoadNextLevel();
+            }
+                
             else
                 winConText.text = "You Lose!";
         }
