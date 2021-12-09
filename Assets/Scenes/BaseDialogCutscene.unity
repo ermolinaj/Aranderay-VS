@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b0b102a23d851241b3cdc0113939914, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneNumber: 1
+  sceneNumber: 2
   nextSceneName: BaseLevel
 --- !u!4 &24354374
 Transform:

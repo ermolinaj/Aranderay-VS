@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,7 +14,7 @@ public class CutsceneTextManager : MonoBehaviour
 
     int currentLineNumber = 0;
     Text textDialogObject;
-    List<string> availableTextLines;
+    List<string> availableTextLines = new List<string>();
 
     // Start is called before the first frame update
     void Start()
@@ -25,7 +26,9 @@ public class CutsceneTextManager : MonoBehaviour
 
     public void SetDialogForScene(int sceneNumber)
     {
-        availableTextLines = new List<string>() { "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." };
+        string path = Directory.GetCurrentDirectory() + "\\Assets\\DialogText\\DialogScene" + sceneNumber + ".txt";
+        string[] logFile = File.ReadAllLines(path);
+        foreach (string s in logFile) availableTextLines.Add(s);
     }
 
     public string GetLine(int lineNumber)
