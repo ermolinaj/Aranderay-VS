@@ -43,6 +43,6 @@ class BasicUnit : Unit
 
     public override void UnMark()
     {
-        GetComponent<Renderer>().material.color = LeadingColor;
+        //GetComponent<Renderer>().material.color = LeadingColor;
     }
 }
