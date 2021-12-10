@@ -46836,7 +46836,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlayersParent: {fileID: 157899943}
-  NextLevelSceneName: DialogScene3 003
+  NextLevelSceneName: GameOutro
 --- !u!114 &1938557898
 MonoBehaviour:
   m_ObjectHideFlags: 0
