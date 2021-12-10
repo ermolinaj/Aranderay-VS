@@ -255,7 +255,7 @@ namespace TbsFramework.Grid
         public void EndGame(int playerNumber)
         {
             Debug.Log("Game Ended");
-            Text winConText = GameObject.Find("GUICamera/Canvas/GameFinishedMessage").GetComponent<Text>();
+            //Text winConText = GameObject.Find("GUICamera/Canvas/GameFinishedMessage").GetComponent<Text>();
 
             if (playerNumber == 0)
             {
@@ -264,7 +264,7 @@ namespace TbsFramework.Grid
                 {
                     AudioSource audio = GameObject.Find("AudioManager/WinSound").GetComponent<AudioSource>();
                     audio.Play(0);
-                    winConText.text = "You Won!";
+                    //winConText.text = "You Won!";
                 }
                 else
                     LoadNextLevel();
@@ -273,7 +273,7 @@ namespace TbsFramework.Grid
             {
                 AudioSource audio = GameObject.Find("AudioManager/LoseSound").GetComponent<AudioSource>();
                 audio.Play(0);
-                winConText.text = "You Lose!";
+                //winConText.text = "You Lose!";
             }                
         }
     }

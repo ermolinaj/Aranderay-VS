@@ -271,6 +271,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1857261014176652, guid: ed022c6eaaa372f498c83d69665e2adc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1889607586039040, guid: ed022c6eaaa372f498c83d69665e2adc, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -368,7 +372,7 @@ PrefabInstance:
     - target: {fileID: 114754865640368622, guid: ed022c6eaaa372f498c83d69665e2adc,
         type: 3}
       propertyPath: _newGameButtonLevel
-      value: ExampleLevel
+      value: Stage1 001
       objectReference: {fileID: 0}
     - target: {fileID: 114803030738577818, guid: ed022c6eaaa372f498c83d69665e2adc,
         type: 3}
@@ -973,7 +977,7 @@ PrefabInstance:
         type: 3}
       propertyPath: invertYToggle
       value: 
-      objectReference: {fileID: 1812568760}
+      objectReference: {fileID: 0}
     - target: {fileID: 114325646035853880, guid: cc18238686906234bb678b403db8d8fd,
         type: 3}
       propertyPath: brightnessText
@@ -1126,18 +1130,6 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 319190451}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1812568760 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114897183776236306, guid: ed022c6eaaa372f498c83d69665e2adc,
-    type: 3}
-  m_PrefabInstance: {fileID: 319190451}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!850595691 &1869374626
 LightingSettings:
   m_ObjectHideFlags: 0

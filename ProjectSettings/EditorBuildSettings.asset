@@ -8,9 +8,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: e84c9862265a1104a9d724503d4111aa
-  - enabled: 1
-    path: Assets/Scenes/ExampleLevel 1.unity
-    guid: 480114fbba4235346bfeebd4ef423161
   - enabled: 0
     path: Assets/Scenes/ExampleLevel.unity
     guid: bee056fd43345b143a51928c2d866625
@@ -20,4 +17,85 @@ EditorBuildSettings:
   - enabled: 0
     path: 
     guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage1/Stage1 001.unity
+    guid: cb0db24a06dd1d144ab8f23db33c1dd9
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage1/Stage1 002.unity
+    guid: f4e49bf0d3f87874baf3095f0a6da629
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage1/Stage1 003.unity
+    guid: a5b63542c4d33e74aac4ca2243b4e6e5
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage2/Stage2 001.unity
+    guid: 11575db3ed9030942bfd2ffe9107c032
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage2/Stage2 002.unity
+    guid: 77c1f88bc54a27740b7af17bcbd07cf9
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage2/Stage2 003.unity
+    guid: 69f1a45368484e94b8669239fca5b17c
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage3/Stage3 001.unity
+    guid: 222e7e4102e799e4fbfef6e4e783f613
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage3/Stage3 002.unity
+    guid: 33b0a9dc3bb032d4faba53d2d06a4378
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage3/Stage3 003.unity
+    guid: a051b77930b383c4d96ffab4823dfa9c
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage4/Stage4 001.unity
+    guid: d712bb89f47c3dd4a955ed0833657beb
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage4/Stage4 002.unity
+    guid: e3499497584092c4991d8bbf898f4b5b
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage4/Stage4 003.unity
+    guid: 8286b77bd4cea844f8c5fdb5235d050f
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage5/Stage5 001.unity
+    guid: fa416b8e964b1e845afae3662c9b27f8
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage5/Stage5 002.unity
+    guid: c206c617e36574343b197e4392e6ba71
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage5/Stage5 003.unity
+    guid: 1e7f61b7330bc2f40b4abe0f0838041d
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage6/Stage6 001.unity
+    guid: c47d280407aceb84f96e8b21e8ccd58f
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage6/Stage6 002.unity
+    guid: 559f7b11ab24ceb4393a51e31348ced3
+  - enabled: 1
+    path: Assets/Scenes/Niveles/Stage6/Stage6 003.unity
+    guid: fe3251e73bc244a4eb43d5f943fa9f8b
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia1/DialogScene1 001.unity
+    guid: 2eb39c0dc166fef44ac40ef08edf373d
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia1/DialogScene1 002.unity
+    guid: 47659fc63b38ec742aa3e67a93041865
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia1/DialogScene1 003.unity
+    guid: 2c51a3d71c5963846b4041a072065e7f
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia2/DialogScene2 001.unity
+    guid: a4065ad79ae08204cb8ede3d10c5a5ec
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia2/DialogScene2 002.unity
+    guid: d6ddb7e7a33c1fb43834b870791107b0
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia2/DialogScene2 003.unity
+    guid: 060f7ea21c850f94792f9f48c44c9209
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia3/DialogScene3 001.unity
+    guid: 8a2cca21b22dfc842bd5fee35ebece13
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia3/DialogScene3 002.unity
+    guid: 454e99ed7fc43f2478b8e8a39914736a
+  - enabled: 1
+    path: Assets/Scenes/Dialogos/Historia3/DialogScene3 003.unity
+    guid: f9d56cfbc36ab8f469e1d749fca16ad7
   m_configObjects: {}
