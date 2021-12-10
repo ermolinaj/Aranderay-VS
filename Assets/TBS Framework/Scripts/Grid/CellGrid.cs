@@ -9,6 +9,7 @@ using TbsFramework.Players;
 using TbsFramework.Units;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Collections;
 
 namespace TbsFramework.Grid
 {
@@ -258,14 +259,22 @@ namespace TbsFramework.Grid
 
             if (playerNumber == 0)
             {
+
                 if (NextLevelSceneName == "")
+                {
+                    AudioSource audio = GameObject.Find("AudioManager/WinSound").GetComponent<AudioSource>();
+                    audio.Play(0);
                     winConText.text = "You Won!";
+                }
                 else
                     LoadNextLevel();
-            }
-                
+            }                
             else
+            {
+                AudioSource audio = GameObject.Find("AudioManager/LoseSound").GetComponent<AudioSource>();
+                audio.Play(0);
                 winConText.text = "You Lose!";
+            }                
         }
     }
 }

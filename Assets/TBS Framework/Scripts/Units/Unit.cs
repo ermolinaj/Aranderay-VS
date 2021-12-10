@@ -260,6 +260,18 @@ namespace TbsFramework.Units
             MarkAsAttacking(unitToAttack);
             unitToAttack.DefendHandler(this, attackAction.Damage);
             AttackActionPerformed(attackAction.ActionCost);
+
+            if (PlayerNumber == 0)
+            {
+                AudioSource audio = GameObject.Find("AudioManager/HumanAttack").GetComponent<AudioSource>();
+                audio.Play(0);
+            }
+            else
+            {
+                AudioSource audio = GameObject.Find("AudioManager/CreatureAttack").GetComponent<AudioSource>();
+                audio.Play(0);
+            }
+            
         }
         /// <summary>
         /// Method for calculating damage and action points cost of attacking given unit
@@ -341,6 +353,17 @@ namespace TbsFramework.Units
 
             if (MovementAnimationSpeed > 0)
             {
+                if (PlayerNumber == 0)
+                {
+                    AudioSource audio = GameObject.Find("AudioManager/HumanWalk").GetComponent<AudioSource>();
+                    audio.Play(0);
+                }
+                else
+                {
+                    AudioSource audio = GameObject.Find("AudioManager/CreatureWalk").GetComponent<AudioSource>();
+                    audio.Play(0);
+                }
+                
                 StartCoroutine(MovementAnimation(path));
             }
             else
