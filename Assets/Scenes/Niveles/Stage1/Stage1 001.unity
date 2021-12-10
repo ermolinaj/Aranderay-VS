@@ -46664,7 +46664,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlayersParent: {fileID: 157899943}
-  NextLevelSceneName: 
+  NextLevelSceneName: DialogScene1 001
 --- !u!114 &1938557898
 MonoBehaviour:
   m_ObjectHideFlags: 0
