@@ -26,7 +26,8 @@ public class CutsceneTextManager : MonoBehaviour
 
     public void SetDialogForScene(int sceneNumber)
     {
-        string path = Directory.GetCurrentDirectory() + "\\Assets\\DialogText\\DialogScene" + sceneNumber + ".txt";
+        //string path = Directory.GetCurrentDirectory() + "\\Assets\\DialogText\\DialogScene" + sceneNumber + ".txt";
+        string path = Directory.GetCurrentDirectory() + "\\Aranderay_Data\\Resources\\DialogScene" + sceneNumber + ".txt";
         string[] logFile = File.ReadAllLines(path);
         foreach (string s in logFile) availableTextLines.Add(s);
     }
