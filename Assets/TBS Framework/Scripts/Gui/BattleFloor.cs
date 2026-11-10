@@ -88,7 +88,7 @@ namespace TbsFramework.Gui
             mesh.SetTriangles(indices, 0);
         }
 
-        private static bool TryGetFloor(Cell cell, int layers, out Bounds floor)
+        internal static bool TryGetFloor(Cell cell, int layers, out Bounds floor)
         {
             floor = default;
             if (cell == null || (layers & (1 << cell.gameObject.layer)) == 0 ||

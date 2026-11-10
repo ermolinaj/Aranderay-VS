@@ -19,6 +19,7 @@ namespace TbsFramework.Grid
     /// </summary>
     public class CellGrid : MonoBehaviour
     {
+        internal const float EnemyCueDuration = 0.18f;
         /// <summary>
         /// LevelLoading event is invoked before Initialize method is run.
         /// </summary>
@@ -47,10 +48,13 @@ namespace TbsFramework.Grid
         internal event EventHandler<AttackEventArgs> UnitHit;
 
         private int? _scoutedPlayerNumber;
-        private HashSet<Cell> _dangerCells = new HashSet<Cell>();
+        private Dictionary<Cell, List<Unit>> _scoutSources = new Dictionary<Cell, List<Unit>>();
         private GridPointer _pointer;
         internal Unit HoveredUnit => _pointer?.HoveredUnit;
+        internal Cell HoveredCell => _pointer?.HoveredCell;
         internal bool ScoutActive => _scoutedPlayerNumber.HasValue;
+        internal Unit CuedEnemy { get; private set; }
+        internal float EnemyCueAt { get; private set; }
         private CellGridState _cellGridState; //The grid delegates some of its behaviours to cellGridState object.
         public CellGridState CellGridState
         {
@@ -293,29 +297,57 @@ namespace TbsFramework.Grid
             RefreshDangerZone();
         }
 
+        internal IReadOnlyList<Unit> ScoutSourcesAt(Cell cell) =>
+            cell != null && _scoutSources.TryGetValue(cell, out var sources) ? sources : Array.Empty<Unit>();
+
         private void RefreshDangerZone()
         {
-            var dangerCells = new HashSet<Cell>();
+            var nextSources = new Dictionary<Cell, List<Unit>>();
             if (_scoutedPlayerNumber.HasValue)
             {
                 foreach (var unit in Units)
                 {
-                    if (unit.PlayerNumber == _scoutedPlayerNumber.Value)
-                        dangerCells.UnionWith(unit.GetPosibleDestinations(Cells));
+                    if (unit.PlayerNumber != _scoutedPlayerNumber.Value)
+                        continue;
+
+                    foreach (var cell in unit.GetPosibleDestinations(Cells))
+                    {
+                        if (!nextSources.TryGetValue(cell, out var sources))
+                        {
+                            sources = new List<Unit>();
+                            nextSources.Add(cell, sources);
+                        }
+                        sources.Add(unit);
+                    }
                 }
             }
 
-            foreach (var cell in _dangerCells)
+            foreach (var cell in _scoutSources.Keys)
             {
-                if (!dangerCells.Contains(cell))
+                if (!nextSources.ContainsKey(cell))
                     cell.SetDanger(false);
             }
-            foreach (var cell in dangerCells)
+            foreach (var cell in nextSources.Keys)
             {
-                if (!_dangerCells.Contains(cell))
+                if (!_scoutSources.ContainsKey(cell))
                     cell.SetDanger(true);
             }
-            _dangerCells = dangerCells;
+            _scoutSources = nextSources;
+        }
+
+        internal bool CueEnemyAction(Unit unit)
+        {
+            var camera = Camera.main;
+            if (camera == null || !GridPointer.IsVisible(unit, camera.cullingMask))
+                return false;
+
+            var point = camera.WorldToScreenPoint(unit.transform.position);
+            if (point.z <= 0 || !camera.pixelRect.Contains(point))
+                return false;
+
+            CuedEnemy = unit;
+            EnemyCueAt = Time.time;
+            return true;
         }
 
         public void EndGame(int playerNumber)

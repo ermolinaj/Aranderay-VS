@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Aranderay;
 using TbsFramework.Grid;
 using TbsFramework.Grid.GridStates;
@@ -9,18 +10,20 @@ namespace TbsFramework.Gui
     internal sealed class BattleHud
     {
         private const float ImpactDuration = 0.32f;
+        private static readonly Color32 ScoutSource = new Color32(226, 185, 116, 218);
         private readonly CellGrid grid;
         private readonly Canvas screen;
         private readonly BattleMarkers markers;
         private readonly BattleFloor floor;
+        private readonly BattleCasualties casualties;
         private readonly Material rimMaterial;
         private readonly UnityEngine.UI.Button endTurnButton;
         private readonly UnityEngine.UI.Button scoutButton;
         private readonly BattleCommand turnCommand;
         private readonly BattleCommand scoutCommand;
 
-        private BasicUnit selectedRim;
-        private BasicUnit hoveredRim;
+        private HashSet<BasicUnit> visibleRims = new HashSet<BasicUnit>();
+        private HashSet<BasicUnit> nextRims = new HashSet<BasicUnit>();
         private bool canRetry;
         private float hitAt = float.NegativeInfinity;
         private Vector3 hitPosition;
@@ -74,6 +77,7 @@ namespace TbsFramework.Gui
             endTurn.onClick.AddListener(Retry);
 
             var shader = Resources.Load<Shader>("CombatFeedback");
+            casualties = new BattleCasualties(overlay, shader);
             if (shader != null && shader.isSupported)
             {
                 rimMaterial = new Material(shader);
@@ -131,35 +135,54 @@ namespace TbsFramework.Gui
                 hovered = null;
 
             floor?.Refresh(selection, visibleLayers);
-            RefreshRims(selection, hovered, visibleLayers);
+            RefreshRims(selection, hovered, visibleLayers, playerTurn && !moving);
+            casualties.Refresh();
             float sinceImpact = Time.time - hitAt;
             float progress = sinceImpact >= 0 ? Mathf.Clamp01(sinceImpact / ImpactDuration) : 1;
             markers.Refresh(camera, grid, selection, hovered, hitPosition, progress);
         }
 
-        private void RefreshRims(CellGridStateUnitSelected selection, Unit hovered, int visibleLayers)
+        private void RefreshRims(CellGridStateUnitSelected selection, Unit hovered, int visibleLayers, bool canPoint)
         {
             if (rimMaterial == null)
                 return;
 
             rimMaterial.SetFloat("_RimWidth", 2.85f * Mathf.Clamp(screen.scaleFactor, 0.85f, 1.6f));
+            if (canPoint && grid.ScoutActive)
+            {
+                foreach (var source in grid.ScoutSourcesAt(grid.HoveredCell))
+                    PaintRim(source, ScoutSource, visibleLayers);
+            }
+
+            float cueProgress = (Time.time - grid.EnemyCueAt) / CellGrid.EnemyCueDuration;
+            if (!grid.GameFinished && grid.CurrentPlayerNumber != 0 && cueProgress < 1f)
+            {
+                float alpha = 0.22f + Mathf.Sin(cueProgress * Mathf.PI) * 0.78f;
+                PaintRim(grid.CuedEnemy, new Color(1f, 0.91f, 0.73f, alpha), visibleLayers);
+            }
+
             var selected = selection?.SelectedUnit;
+            PaintRim(selected, BattleMarkers.Ally, visibleLayers);
             bool friendly = hovered != null && hovered.PlayerNumber == grid.CurrentPlayerNumber;
-            var pointed = hovered != selected && (friendly || selection?.CanAttack(hovered) == true)
-                ? hovered as BasicUnit : null;
+            if (hovered != selected && (friendly || selection?.CanAttack(hovered) == true))
+                PaintRim(hovered, friendly ? BattleMarkers.HoverAlly : BattleMarkers.Target, visibleLayers);
 
-            var selectedSprite = GridPointer.IsVisible(selected, visibleLayers) ? selected as BasicUnit : null;
-            if (selectedRim != null && selectedRim != selectedSprite)
-                selectedRim.HideFeedbackRim();
-            if (hoveredRim != null && hoveredRim != pointed)
-                hoveredRim.HideFeedbackRim();
+            foreach (var rim in visibleRims)
+            {
+                if (rim != null && !nextRims.Contains(rim))
+                    rim.HideFeedbackRim();
+            }
+            (visibleRims, nextRims) = (nextRims, visibleRims);
+            nextRims.Clear();
+        }
 
-            selectedRim = selectedSprite;
-            hoveredRim = pointed;
-            if (selectedRim != null)
-                selectedRim.ShowFeedbackRim(rimMaterial, BattleMarkers.Ally);
-            if (hoveredRim != null)
-                hoveredRim.ShowFeedbackRim(rimMaterial, friendly ? BattleMarkers.HoverAlly : BattleMarkers.Target);
+        private void PaintRim(Unit unit, Color color, int visibleLayers)
+        {
+            if (unit is BasicUnit basic && GridPointer.IsVisible(unit, visibleLayers))
+            {
+                basic.ShowFeedbackRim(rimMaterial, color);
+                nextRims.Add(basic);
+            }
         }
 
         internal void ShowImpact(AttackEventArgs hit)
@@ -169,16 +192,20 @@ namespace TbsFramework.Gui
                 return;
             hitPosition = hit.Defender.transform.position + Vector3.up * 0.28f;
             hitAt = Time.time + SilhouetteMotion.ContactTime;
+            if (hit.Defender.HitPoints <= 0)
+                casualties.Queue(hit.Defender, hitAt, camera.cullingMask);
         }
 
         internal void Dispose()
         {
             if (endTurnButton != null)
                 endTurnButton.onClick.RemoveListener(Retry);
-            if (selectedRim != null)
-                selectedRim.HideFeedbackRim();
-            if (hoveredRim != null)
-                hoveredRim.HideFeedbackRim();
+            foreach (var rim in visibleRims)
+            {
+                if (rim != null)
+                    rim.HideFeedbackRim();
+            }
+            casualties.Dispose();
             floor?.Dispose();
             if (rimMaterial != null)
                 Object.Destroy(rimMaterial);

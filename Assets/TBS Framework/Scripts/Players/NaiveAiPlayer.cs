@@ -34,20 +34,35 @@ namespace TbsFramework.Players
 
                 var enemies = cellGrid.Units.FindAll(other => other.PlayerNumber != PlayerNumber);
                 var targets = enemies.FindAll(enemy => unit.IsUnitAttackable(enemy, unit.Cell));
-                if (targets.Count == 0 && unit.MovementPoints > 0 && unit.ActionPoints >= 1)
+                var path = targets.Count == 0 && unit.MovementPoints > 0 && unit.ActionPoints >= 1
+                    ? ChooseApproach(unit, cellGrid.Cells, enemies) : null;
+                if (targets.Count == 0 && path == null)
                 {
-                    var path = ChooseApproach(unit, cellGrid.Cells, enemies);
-                    if (path != null)
-                    {
-                        unit.Move(path[0], path);
-                        while (unit.IsMoving)
-                            yield return null;
-                        targets = enemies.FindAll(enemy => unit.IsUnitAttackable(enemy, unit.Cell));
-                    }
+                    yield return null;
+                    continue;
+                }
+
+                bool wasCued = cellGrid.CueEnemyAction(unit);
+                if (wasCued)
+                    yield return new WaitForSeconds(CellGrid.EnemyCueDuration);
+                if (cellGrid.GameFinished)
+                    yield break;
+
+                if (path != null)
+                {
+                    unit.Move(path[0], path);
+                    while (unit.IsMoving)
+                        yield return null;
+                    targets = enemies.FindAll(enemy => unit.IsUnitAttackable(enemy, unit.Cell));
                 }
 
                 if (targets.Count > 0)
                 {
+                    // A creature can enter view while moving towards its target.
+                    if (path != null && !wasCued && cellGrid.CueEnemyAction(unit))
+                        yield return new WaitForSeconds(CellGrid.EnemyCueDuration);
+                    if (cellGrid.GameFinished)
+                        yield break;
                     unit.AttackHandler(targets[_random.Next(targets.Count)]);
                     yield return new WaitForSeconds(0.5f);
                 }

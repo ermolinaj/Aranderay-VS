@@ -21,6 +21,7 @@ namespace TbsFramework.Grid
         private MonoBehaviour _hovered;
 
         internal Unit HoveredUnit => _hoverState == _grid.CellGridState ? _hovered as Unit : null;
+        internal Cell HoveredCell => _hoverState == _grid.CellGridState ? _hovered as Cell : null;
 
         public GridPointer(CellGrid grid)
         {
