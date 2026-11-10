@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Aranderay;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -58,6 +59,32 @@ namespace SpeedTutorMainMenuSystem
         private void Start()
         {
             menuNumber = 1;
+            ConfigureControlsHelp();
+        }
+
+        private void ConfigureControlsHelp()
+        {
+            if (controlsMenu == null)
+                return;
+            var panel = controlsMenu.GetComponentInChildren<UnityEngine.UI.Image>(true);
+            var back = controlsMenu.GetComponentInChildren<UnityEngine.UI.Button>(true);
+            if (panel == null || back == null || !back.TryGetComponent<UnityEngine.UI.Text>(out var backLabel))
+                return;
+
+            var font = backLabel.font;
+            var title = TvOverlay.AddText(panel.rectTransform, "Controls title", font, 40, TvOverlay.Green);
+            TvOverlay.Place(title.rectTransform, 0.05f, 0.81f, 0.95f, 0.95f);
+            title.fontStyle = FontStyle.Bold;
+            title.text = "Controles";
+
+            var help = TvOverlay.AddText(panel.rectTransform, "Game controls", font, 29, TvOverlay.Ink);
+            TvOverlay.Place(help.rectTransform, 0.05f, 0.11f, 0.95f, 0.77f);
+            help.supportRichText = true;
+            help.text = "<b>Clic izquierdo</b>   Elegí un soldado, movelo o atacá.\n\n" +
+                "<b>S</b>   Mostrá u ocultá el movimiento posible de las criaturas.\n" +
+                "<b>N</b>   Terminá el turno.     <b>R</b>   Reiniciá el combate.\n\n" +
+                "<b>← / →</b>   Pasá de página en los interludios.";
+            backLabel.text = "‹  Volver";
         }
         #endregion
 
@@ -320,6 +347,7 @@ namespace SpeedTutorMainMenuSystem
             graphicsMenu.SetActive(false);
             soundMenu.SetActive(false);
             gameplayMenu.SetActive(false);
+            controlsMenu.SetActive(false);
             menuNumber = 1;
         }
 

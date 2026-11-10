@@ -8,9 +8,13 @@ namespace TbsFramework.Grid.GridStates
     {
         private readonly Unit _unit;
         private HashSet<Cell> _pathsInRange;
-        private readonly List<Unit> _markedTargets = new List<Unit>();
         private Cell _hoveredCell;
         private List<Cell> _previewPath;
+
+        internal Unit SelectedUnit => _unit;
+        internal IEnumerable<Cell> ReachableCells => _pathsInRange;
+        internal IReadOnlyList<Cell> PreviewPath => _previewPath;
+        internal bool CanAttack(Unit target) => !_unit.IsMoving && _unit.IsUnitAttackable(target, _unit.Cell);
 
         public CellGridStateUnitSelected(CellGrid cellGrid, Unit unit) : base(cellGrid)
         {
@@ -48,7 +52,7 @@ namespace TbsFramework.Grid.GridStates
                 return;
             }
 
-            if (!_unit.IsUnitAttackable(unit, _unit.Cell))
+            if (!CanAttack(unit))
                 return;
 
             _unit.AttackHandler(unit);
@@ -62,7 +66,6 @@ namespace TbsFramework.Grid.GridStates
                 return;
 
             ClearCellPreview();
-            ShowTargetsFrom(_unit.Cell);
         }
 
         public override void OnCellSelected(Cell cell)
@@ -72,14 +75,12 @@ namespace TbsFramework.Grid.GridStates
             if (!_unit.IsCellMovableTo(cell) || !_pathsInRange.Contains(cell))
             {
                 cell.MarkAsHighlighted();
-                ShowTargetsFrom(_unit.Cell);
                 return;
             }
 
             _previewPath = _unit.FindPath(_cellGrid.Cells, cell);
             foreach (var step in _previewPath)
                 step.MarkAsPath();
-            ShowTargetsFrom(cell);
         }
 
         public override void OnStateEnter()
@@ -90,13 +91,11 @@ namespace TbsFramework.Grid.GridStates
             _pathsInRange = _unit.GetAvailableDestinations(_cellGrid.Cells);
             foreach (var cell in _pathsInRange)
                 cell.MarkAsReachable();
-            ShowTargetsFrom(_unit.Cell);
         }
 
         public override void OnStateExit()
         {
             _unit.OnUnitDeselected();
-            ClearTargets();
         }
 
         private void ClearCellPreview()
@@ -121,27 +120,5 @@ namespace TbsFramework.Grid.GridStates
                 cell.UnMark();
         }
 
-        private void ShowTargetsFrom(Cell origin)
-        {
-            ClearTargets();
-            foreach (var target in _cellGrid.Units)
-            {
-                if (!_unit.IsUnitAttackable(target, origin))
-                    continue;
-
-                target.MarkAsReachableEnemy();
-                _markedTargets.Add(target);
-            }
-        }
-
-        private void ClearTargets()
-        {
-            foreach (var target in _markedTargets)
-            {
-                if (target != null)
-                    target.UnitState.Apply();
-            }
-            _markedTargets.Clear();
-        }
     }
 }

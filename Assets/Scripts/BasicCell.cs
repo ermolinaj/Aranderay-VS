@@ -53,12 +53,13 @@ class BasicCell : Square
 
     private void RefreshColor()
     {
-        Color color = mark switch
+        // Keep the Scout layer visible; route and reach markers are drawn separately.
+        Color color = isDangerous ? Color.red : mark switch
         {
-            Mark.Path => isDangerous ? new Color(1f, 0.55f, 0f) : Color.green,
-            Mark.Reachable => isDangerous ? new Color(1f, 0.25f, 0f) : Color.yellow,
-            Mark.Highlighted => isDangerous ? Color.red : new Color(0.75f, 0.75f, 0.75f),
-            _ => isDangerous ? Color.red : Color.white
+            Mark.Path => Color.green,
+            Mark.Reachable => Color.yellow,
+            Mark.Highlighted => new Color(0.75f, 0.75f, 0.75f),
+            _ => Color.white
         };
         GetComponent<Renderer>().material.color = color;
     }

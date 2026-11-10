@@ -20,6 +20,8 @@ namespace TbsFramework.Grid
         private CellGridState _hoverState;
         private MonoBehaviour _hovered;
 
+        internal Unit HoveredUnit => _hoverState == _grid.CellGridState ? _hovered as Unit : null;
+
         public GridPointer(CellGrid grid)
         {
             _grid = grid;
@@ -105,8 +107,13 @@ namespace TbsFramework.Grid
 
             foreach (var unit in _grid.Units)
             {
-                if (!IsVisible(unit, layers) || !unit.TryGetComponent<SpriteRenderer>(out var renderer) ||
-                    !renderer.enabled || renderer.forceRenderingOff || renderer.color.a <= 0f || renderer.sprite == null)
+                if (!IsVisible(unit, layers))
+                    continue;
+
+                var renderer = (unit as BasicUnit)?.PresentedSprite;
+                if (renderer == null && !unit.TryGetComponent(out renderer))
+                    continue;
+                if (!renderer.enabled || renderer.forceRenderingOff || renderer.color.a <= 0f || renderer.sprite == null)
                     continue;
 
                 if (HitsSprite(ray, renderer, Mathf.Min(cellDistance, unitDistance), out float spriteDistance))
@@ -125,7 +132,7 @@ namespace TbsFramework.Grid
             return nearestCell;
         }
 
-        private static bool IsVisible(Unit unit, int layers)
+        internal static bool IsVisible(Unit unit, int layers)
         {
             return unit != null && unit.isActiveAndEnabled && unit.HitPoints > 0 &&
                 (layers & (1 << unit.gameObject.layer)) != 0;

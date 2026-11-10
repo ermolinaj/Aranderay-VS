@@ -37,13 +37,11 @@ namespace TbsFramework.Grid.UnitGenerators
                     freeCells.RemoveAt(0);
                     cell.IsTaken = true;
 
-                    var unit = Instantiate(UnitPrefab).GetComponent<Unit>();
-                    unit.transform.position = cell.transform.position;
+                    var unit = Instantiate(UnitPrefab, UnitsParent, true).GetComponent<Unit>();
                     unit.PlayerNumber = i;
                     unit.Cell = cell;
                     cell.CurrentUnit = unit;
                     unit.Initialize();
-                    unit.transform.parent = UnitsParent;
 
                     ret.Add(unit);
                 }

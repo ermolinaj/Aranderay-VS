@@ -155,6 +155,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dialog: {fileID: 4900000, guid: f3a660b7bd995af47a8b520aaa16ad09, type: 3}
   textDialogObject: {fileID: 1807433280}
+  readingFont: {fileID: 12800000, guid: e0f37c9f5fbc56e40b5d5725a4b720c5, type: 3}
   nextSceneName: Stage5 002
 --- !u!4 &24354374
 Transform:

@@ -1,3 +1,30 @@
-Luego de la resistencia de las oleadas los sobrevivientes se ven claramente superados por la insistencia enemiga. Los esfuerzos de los operarios no fueron suficientes y varias de las provisiones fueron dañadas por los ataques.                                                                                  Solo queda la cantidad necesaria para unos pocos dias.                                                                                                  Tomy  — Bueno, ya me pinto el sueño. Recuerden que el tiempo es la cosa más valiosa que un ser humano puede gastar, y yo voy a gastar el mío. Durmiendo.                                                                         Flores — ¿Alguno me puede decir como este fantasma sigue vivo?                                                                   Tomy — Justamente como dijiste, siendo un fantasma. ¡Buuuuuu!                                                                                 Tomy toma su mate, su pava y se retira hacia una esquina.                                                                               *Ruidito de Mate*                                                                                                              Gonzales — Tranquilo Flores, en situaciones críticas deberíamos estar más unidos que nunca.                                                                                         Tomy — Si Flores, tranca. Mañana nos tomamos unos mates.
-Los dias transcurren y todo parece calmo. Algunos operarios duermen, otros no logran pegar un ojo.                                                   Gonzalez observa a El Cabo Sos. Tal vez preso por la ira o el resentimiento, tiene el pensamiento recurrente de vengarse. Si bien tuvieronun cruce fuerte días anteriores, nunca se llevaron del todo bien.                                                                                             Gonzalez llama a El Cabo Sosa cerca de una de las paredes rotas de la base, con la intención de ejecutar su venganza.                                                                                           El Cabo Sosa, Se acerca.                                                                                                           El Cabo Sosa — Qué queres Gonzalez…. No preferís estar con los demás.charlar, descansar, a fin de cuentas. Parece que no nos queda mucho.                                                                                          Gonzalez — Creo que cada uno tiene derecho de hacer con sus últimos momentos de vida lo que quiera ¿verdad?                                                                                         El Cabo sosa — Es respetable, con ese punto de vista, me voy a ir pensando que sos un poco más idiota de lo que siempre considere.                                                                                          Gonzalez mira fijamente a El Cabo Sosa, respira y con su puño cerrado, sin dudarlo ni un momento. Lo noquea de un solo golpe y antes de que el resto de los sobrevivientes de la base puedan reaccionar. 
-Gonzales enciende una bengala y la tira cerca del cuerpo desvanecido de El Cabo Sosa. Este denso humo rojo capta la atención de las criaturas que comienzan a acercarce.                                                                      Tomy que fue el unico que observo esto, se queda viendo el cuerpo desplomado de el cabo Sosa y exclama.                                                                                       Tomy — ¡Que golpazo!... Seguro ya no quiere mate.                                                                       Mientras Tomy se aleja se escucha, !Hey Gonzales, QUERES UN MATE!!!!
+# Los últimos suministros
+Tras resistir varias oleadas, los operarios cuentan las provisiones que quedaron intactas. Apenas alcanzan para unos días.
+
+Tomy — Bueno, ya me pintó el sueño. El tiempo es lo más valioso que uno puede gastar. Yo voy a gastar el mío durmiendo.
+Flores — ¿Alguno me puede decir cómo este fantasma sigue vivo?
+Tomy — Siendo un fantasma. ¡Buuuuuu!
+---
+Tomy se lleva el mate y la pava a un rincón.
+
+*Ruidito de Mate*
+
+González — Tranquilo, Flores. En situaciones críticas deberíamos estar más unidos que nunca.
+Tomy — Sí, Flores, tranca. Mañana nos tomamos unos mates.
+
+Pasan los días. Algunos duermen; otros no logran pegar un ojo. González sigue pensando en su pelea con Sosa y lo llama junto a una pared rota de la base.
+---
+Cabo Sosa — ¿Qué querés, González? ¿No preferís estar con los demás? Parece que no nos queda mucho.
+González — Cada uno tiene derecho a hacer lo que quiera con sus últimos momentos, ¿verdad?
+Cabo Sosa — Es respetable. Me voy a ir pensando que sos un poco más idiota de lo que siempre consideré.
+
+González lo mira, respira y lo noquea de un solo golpe.
+---
+Antes de que el resto reaccione, González enciende una bengala y la tira cerca de Sosa. El humo rojo atrae a las criaturas.
+
+Tomy fue el único que vio el golpe. Mira a Sosa en el suelo.
+
+Tomy — ¡Qué golpazo! Seguro ya no quiere mate.
+
+Al alejarse, se lo escucha gritar:
+Tomy — ¡Ey, González! ¿Querés un mate?

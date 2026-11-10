@@ -38,7 +38,6 @@ namespace TbsFramework.Grid.UnitGenerators
                 cell.IsTaken = true;
                 unit.Cell = cell;
                 cell.CurrentUnit = unit;
-                unit.transform.position = cell.transform.position;
                 unit.Initialize();
                 ret.Add(unit);
             }

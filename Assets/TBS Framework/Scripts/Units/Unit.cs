@@ -16,6 +16,8 @@ namespace TbsFramework.Units
     public abstract class Unit : MonoBehaviour
     {
         Dictionary<Cell, List<Cell>> cachedPaths = null;
+        private Vector3 cellPlacementOffset;
+        internal Vector3 BoardPosition => transform.position - cellPlacementOffset;
         /// <summary>
         /// Invoked when the board pointer clicks this unit.
         /// </summary>
@@ -149,7 +151,13 @@ namespace TbsFramework.Units
             TotalHitPoints = HitPoints;
             TotalMovementPoints = MovementPoints;
             TotalActionPoints = ActionPoints;
+
+            cellPlacementOffset = GetCellPlacementOffset();
+            if (Cell != null)
+                transform.position = Cell.transform.position + cellPlacementOffset;
         }
+
+        protected virtual Vector3 GetCellPlacementOffset() => Vector3.zero;
 
         internal void PointerDown()
         {
@@ -297,14 +305,14 @@ namespace TbsFramework.Units
 
             if (UnitAttacked != null)
             {
-                UnitAttacked.Invoke(this, new AttackEventArgs(aggressor, this, damage));
+                UnitAttacked.Invoke(this, new AttackEventArgs(aggressor, this, damageTaken));
             }
             if (HitPoints <= 0)
             {
                 ReleaseCell();
                 if (UnitDestroyed != null)
                 {
-                    UnitDestroyed.Invoke(this, new AttackEventArgs(aggressor, this, damage));
+                    UnitDestroyed.Invoke(this, new AttackEventArgs(aggressor, this, damageTaken));
                 }
                 OnDestroyed();
             }
@@ -340,8 +348,8 @@ namespace TbsFramework.Units
                 return;
 
             var originCell = Cell;
-            // Keep the unit's placement relative to the tile, even on a rotated grid.
-            var cellOffset = transform.position - originCell.transform.position;
+            // Each step uses the spawn offset so placement cannot drift over successive moves.
+            var cellOffset = cellPlacementOffset;
             MovementPoints -= totalMovementCost;
             cachedPaths = null;
 

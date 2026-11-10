@@ -1,6 +1,6 @@
-﻿using System;
-using TbsFramework.Grid;
+﻿using TbsFramework.Grid;
 using TbsFramework.Grid.GridStates;
+using TbsFramework.Units;
 using UnityEngine;
 
 namespace TbsFramework.Gui
@@ -8,26 +8,30 @@ namespace TbsFramework.Gui
     public class GUIController : MonoBehaviour
     {
         public CellGrid CellGrid;
+        private BattleHud hud;
 
-        void Awake()
+        private void Start()
         {
-            CellGrid.LevelLoading += onLevelLoading;
-            CellGrid.LevelLoadingDone += onLevelLoadingDone;
+            if (CellGrid == null)
+                return;
+            hud = BattleHud.Create(CellGrid);
+            CellGrid.UnitHit += OnUnitHit;
         }
 
-        private void onLevelLoading(object sender, EventArgs e)
+        private void OnDestroy()
         {
-            Debug.Log("Level is loading");
+            if (CellGrid != null)
+                CellGrid.UnitHit -= OnUnitHit;
+            hud?.Dispose();
         }
 
-        private void onLevelLoadingDone(object sender, EventArgs e)
-        {
-            Debug.Log("Level loading done");
-            Debug.Log("Press 'n' to end turn");
-        }
+        private void OnUnitHit(object sender, AttackEventArgs hit) => hud?.ShowImpact(hit);
+        private void LateUpdate() => hud?.Refresh();
 
-        void Update()
+        private void Update()
         {
+            if (CellGrid == null)
+                return;
             if (Input.GetKeyDown(KeyCode.N))
             {
                 CellGrid.EndTurn();//User ends his turn by pressing "n" on keyboard.

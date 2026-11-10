@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
@@ -43,10 +44,13 @@ namespace TbsFramework.Grid
         /// UnitAdded event is invoked each time AddUnit method is called.
         /// </summary>
         public event EventHandler<UnitCreatedEventArgs> UnitAdded;
+        internal event EventHandler<AttackEventArgs> UnitHit;
 
         private int? _scoutedPlayerNumber;
         private HashSet<Cell> _dangerCells = new HashSet<Cell>();
         private GridPointer _pointer;
+        internal Unit HoveredUnit => _pointer?.HoveredUnit;
+        internal bool ScoutActive => _scoutedPlayerNumber.HasValue;
         private CellGridState _cellGridState; //The grid delegates some of its behaviours to cellGridState object.
         public CellGridState CellGridState
         {
@@ -80,6 +84,7 @@ namespace TbsFramework.Grid
         public string NextLevelSceneName;
 
         public bool GameFinished { get; private set; }
+        internal int? WinningPlayer { get; private set; }
         public List<Player> Players { get; private set; }
         public List<Cell> Cells { get; private set; }
         public List<Unit> Units { get; private set; }
@@ -178,6 +183,7 @@ namespace TbsFramework.Grid
                 return;
 
             unit.UnitClicked -= OnUnitClicked;
+            unit.UnitAttacked -= OnUnitHit;
             unit.UnitDestroyed -= OnUnitDestroyed;
             unit.UnitMoved -= OnUnitMoved;
 
@@ -193,6 +199,8 @@ namespace TbsFramework.Grid
             if (_scoutedPlayerNumber.HasValue)
                 RefreshDangerZone();
         }
+
+        private void OnUnitHit(object sender, AttackEventArgs e) => UnitHit?.Invoke(this, e);
         /// <summary>
         /// Adds unit to the game
         /// </summary>
@@ -202,6 +210,7 @@ namespace TbsFramework.Grid
             var addedUnit = unit.GetComponent<Unit>();
             Units.Add(addedUnit);
             addedUnit.UnitClicked += OnUnitClicked;
+            addedUnit.UnitAttacked += OnUnitHit;
             addedUnit.UnitDestroyed += OnUnitDestroyed;
             addedUnit.UnitMoved += OnUnitMoved;
 
@@ -315,21 +324,26 @@ namespace TbsFramework.Grid
                 return;
 
             GameFinished = true;
+            WinningPlayer = playerNumber;
             _scoutedPlayerNumber = null;
             RefreshDangerZone();
             CellGridState = new CellGridStateBlockInput(this);
             GameEnded?.Invoke(this, EventArgs.Empty);
 
-            if (playerNumber == 0 && !string.IsNullOrEmpty(NextLevelSceneName))
-            {
-                LoadNextLevel();
-                return;
-            }
-
             string soundName = playerNumber == 0 ? "WinSound" : "LoseSound";
             var audio = GameObject.Find("AudioManager/" + soundName)?.GetComponent<AudioSource>();
             if (audio != null)
                 audio.Play();
+
+            if (playerNumber == 0 && !string.IsNullOrEmpty(NextLevelSceneName))
+                StartCoroutine(ContinueAfterVictory());
+        }
+
+        private IEnumerator ContinueAfterVictory()
+        {
+            // Give the final hit and the victory readout a moment before the interlude.
+            yield return new WaitForSecondsRealtime(0.9f);
+            LoadNextLevel();
         }
     }
 }
