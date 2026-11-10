@@ -446,7 +446,7 @@ namespace TbsFramework.EditorUtils
             HandleUtility.Repaint();
             if (Event.current.button == 0 && (Event.current.type == EventType.MouseDrag || Event.current.type == EventType.MouseDown)) 
             {
-                if (unitEditModeOn.value && selectedCell.IsTaken)
+                if (unitEditModeOn.value && (!selectedCell.IsWalkable || selectedCell.IsTaken))
                 {
                     return;
                 }

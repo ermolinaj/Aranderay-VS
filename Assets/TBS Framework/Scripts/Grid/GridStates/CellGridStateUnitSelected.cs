@@ -1,36 +1,33 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using TbsFramework.Cells;
 using TbsFramework.Units;
-using TbsFramework.Units.UnitStates;
 
 namespace TbsFramework.Grid.GridStates
 {
     class CellGridStateUnitSelected : CellGridState
     {
-        private Unit _unit;
+        private readonly Unit _unit;
         private HashSet<Cell> _pathsInRange;
-        private List<Unit> _unitsInRange;
-        private List<Unit> _unitsMarkedInRange;
-
-        private Cell _unitCell;
-
-        private List<Cell> _currentPath;
+        private readonly List<Unit> _markedTargets = new List<Unit>();
+        private Cell _hoveredCell;
+        private List<Cell> _previewPath;
 
         public CellGridStateUnitSelected(CellGrid cellGrid, Unit unit) : base(cellGrid)
         {
             _unit = unit;
-            _pathsInRange = new HashSet<Cell>();
-            _currentPath = new List<Cell>();
-            _unitsInRange = new List<Unit>();
-            _unitsMarkedInRange = new List<Unit>();
+        }
+
+        internal override bool PrefersCell(Cell cell, Unit unit)
+        {
+            return unit == _unit && cell != null && !_unit.IsMoving &&
+                _pathsInRange.Contains(cell) && _unit.IsCellMovableTo(cell);
         }
 
         public override void OnCellClicked(Cell cell)
         {
             if (_unit.IsMoving)
                 return;
-            if (cell.IsTaken || !_pathsInRange.Contains(cell))
+            if (!_unit.IsCellMovableTo(cell) || !_pathsInRange.Contains(cell))
             {
                 _cellGrid.CellGridState = new CellGridStateWaitingForInput(_cellGrid);
                 return;
@@ -42,66 +39,47 @@ namespace TbsFramework.Grid.GridStates
         }
         public override void OnUnitClicked(Unit unit)
         {
-            if (unit.Equals(_unit) || _unit.IsMoving)
+            if (unit == _unit || _unit.IsMoving)
                 return;
 
-            if (_unitsInRange.Contains(unit) && !_unit.IsMoving)
-            {
-                _unit.AttackHandler(unit);
-                if (!_cellGrid.GameFinished)
-                {
-                    _cellGrid.CellGridState = new CellGridStateUnitSelected(_cellGrid, _unit);
-                }
-            }
-
-            if (unit.PlayerNumber.Equals(_unit.PlayerNumber))
+            if (unit.PlayerNumber == _unit.PlayerNumber)
             {
                 _cellGrid.CellGridState = new CellGridStateUnitSelected(_cellGrid, unit);
+                return;
             }
 
+            if (!_unit.IsUnitAttackable(unit, _unit.Cell))
+                return;
+
+            _unit.AttackHandler(unit);
+            if (!_cellGrid.GameFinished)
+                _cellGrid.CellGridState = new CellGridStateUnitSelected(_cellGrid, _unit);
         }
+
         public override void OnCellDeselected(Cell cell)
         {
-            base.OnCellDeselected(cell);
-            foreach (var _cell in _currentPath)
-            {
-                if (_pathsInRange.Contains(_cell))
-                    _cell.MarkAsReachable();
-                else
-                    _cell.UnMark();
-            }
-            foreach (var unit in _unitsMarkedInRange)
-            {
-                unit.UnMark();
-            }
-            _unitsMarkedInRange.Clear();
-            foreach (var unit in _unitsInRange)
-            {
-                unit.MarkAsReachableEnemy();
-            }
+            if (_hoveredCell != cell)
+                return;
+
+            ClearCellPreview();
+            ShowTargetsFrom(_unit.Cell);
         }
+
         public override void OnCellSelected(Cell cell)
         {
-            base.OnCellSelected(cell);
-            if (!_pathsInRange.Contains(cell)) return;
+            ClearCellPreview();
+            _hoveredCell = cell;
+            if (!_unit.IsCellMovableTo(cell) || !_pathsInRange.Contains(cell))
+            {
+                cell.MarkAsHighlighted();
+                ShowTargetsFrom(_unit.Cell);
+                return;
+            }
 
-            _currentPath = _unit.FindPath(_cellGrid.Cells, cell);
-            foreach (var _cell in _currentPath)
-            {
-                _cell.MarkAsPath();
-            }
-            foreach (var unit in _unitsInRange)
-            {
-                unit.UnMark();
-            }
-            foreach (var currentUnit in _cellGrid.Units)
-            {
-                if (_unit.IsUnitAttackable(currentUnit, cell))
-                {
-                    currentUnit.SetState(new UnitStateMarkedAsReachableEnemy(currentUnit));
-                    _unitsMarkedInRange.Add(currentUnit);
-                }
-            }
+            _previewPath = _unit.FindPath(_cellGrid.Cells, cell);
+            foreach (var step in _previewPath)
+                step.MarkAsPath();
+            ShowTargetsFrom(cell);
         }
 
         public override void OnStateEnter()
@@ -109,50 +87,61 @@ namespace TbsFramework.Grid.GridStates
             base.OnStateEnter();
 
             _unit.OnUnitSelected();
-            _unitCell = _unit.Cell;
-
             _pathsInRange = _unit.GetAvailableDestinations(_cellGrid.Cells);
-            var cellsNotInRange = _cellGrid.Cells.Except(_pathsInRange);
-
-            foreach (var cell in cellsNotInRange)
-            {
-                cell.UnMark();
-            }
             foreach (var cell in _pathsInRange)
-            {
                 cell.MarkAsReachable();
-            }
-
-            if (_unit.ActionPoints <= 0) return;
-
-            foreach (var currentUnit in _cellGrid.Units)
-            {
-                if (currentUnit.PlayerNumber.Equals(_unit.PlayerNumber))
-                    continue;
-
-                if (_unit.IsUnitAttackable(currentUnit, _unit.Cell))
-                {
-                    currentUnit.SetState(new UnitStateMarkedAsReachableEnemy(currentUnit));
-                    _unitsInRange.Add(currentUnit);
-                }
-            }
-
-            if (_unitCell.GetNeighbours(_cellGrid.Cells).FindAll(c => c.MovementCost <= _unit.MovementPoints).Count == 0
-                && _unitsInRange.Count == 0)
-                _unit.SetState(new UnitStateMarkedAsFinished(_unit));
+            ShowTargetsFrom(_unit.Cell);
         }
+
         public override void OnStateExit()
         {
             _unit.OnUnitDeselected();
-            foreach (var unit in _unitsInRange)
+            ClearTargets();
+        }
+
+        private void ClearCellPreview()
+        {
+            if (_hoveredCell != null)
+                RestoreCellMark(_hoveredCell);
+            _hoveredCell = null;
+
+            if (_previewPath != null)
             {
-                if (unit == null) continue;
-                unit.SetState(new UnitStateNormal(unit));
+                foreach (var cell in _previewPath)
+                    RestoreCellMark(cell);
+                _previewPath = null;
             }
-            foreach (var cell in _cellGrid.Cells)
-            {
+        }
+
+        private void RestoreCellMark(Cell cell)
+        {
+            if (_pathsInRange.Contains(cell))
+                cell.MarkAsReachable();
+            else
                 cell.UnMark();
+        }
+
+        private void ShowTargetsFrom(Cell origin)
+        {
+            ClearTargets();
+            foreach (var target in _cellGrid.Units)
+            {
+                if (!_unit.IsUnitAttackable(target, origin))
+                    continue;
+
+                target.MarkAsReachableEnemy();
+                _markedTargets.Add(target);
             }
+        }
+
+        private void ClearTargets()
+        {
+            foreach (var target in _markedTargets)
+            {
+                if (target != null)
+                    target.UnitState.Apply();
+            }
+            _markedTargets.Clear();
         }
     }
 }

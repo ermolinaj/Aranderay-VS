@@ -4,11 +4,17 @@ using UnityEngine;
 class BasicUnit : Unit
 {
     public Color LeadingColor;
+
+    private Material unitMaterial;
+    private Color baseColor;
+
     public override void Initialize()
     {
         base.Initialize();
         transform.localPosition -= new Vector3(0, 0, 1);
-        GetComponent<Renderer>().material.color = LeadingColor;
+        unitMaterial = GetComponent<Renderer>().material;
+        baseColor = LeadingColor.a > 0f ? LeadingColor : unitMaterial.color;
+        UnMark();
     }
     public override void MarkAsAttacking(Unit other)
     {
@@ -24,25 +30,32 @@ class BasicUnit : Unit
 
     public override void MarkAsFinished()
     {
+        UnMark();
     }
 
     public override void MarkAsFriendly()
     {
-        GetComponent<Renderer>().material.color = LeadingColor + new Color(0.8f, 1, 0.8f);
+        SetTint(LeadingColor + new Color(0.8f, 1, 0.8f));
     }
 
     public override void MarkAsReachableEnemy()
     {
-        GetComponent<Renderer>().material.color = LeadingColor + Color.red;
+        SetTint(LeadingColor + Color.red);
     }
 
     public override void MarkAsSelected()
     {
-        GetComponent<Renderer>().material.color = LeadingColor + Color.green;
+        SetTint(LeadingColor + Color.green);
     }
 
     public override void UnMark()
     {
-        //GetComponent<Renderer>().material.color = LeadingColor;
+        unitMaterial.color = baseColor;
+    }
+
+    private void SetTint(Color color)
+    {
+        color.a = baseColor.a;
+        unitMaterial.color = color;
     }
 }

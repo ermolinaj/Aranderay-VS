@@ -25,7 +25,7 @@ namespace TbsFramework.Cells
                 neighbours = new List<Cell>(4);
                 foreach (var direction in _directions)
                 {
-                    var neighbour = cells.Find(c => c.OffsetCoord == OffsetCoord + direction);
+                    var neighbour = cells.Find(c => c.IsWalkable && c.OffsetCoord == OffsetCoord + direction);
                     if (neighbour == null) continue;
 
                     neighbours.Add(neighbour);

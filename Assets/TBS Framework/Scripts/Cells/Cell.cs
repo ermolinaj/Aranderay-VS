@@ -23,6 +23,7 @@ namespace TbsFramework.Cells
         /// Indicates if something is occupying the cell.
         /// </summary>
         public bool IsTaken;
+        public virtual bool IsWalkable => true;
         /// <summary>
         /// Cost of moving through the cell.
         /// </summary>
@@ -46,17 +47,17 @@ namespace TbsFramework.Cells
         /// </summary>
         public event EventHandler CellDehighlighted;
 
-        protected virtual void OnMouseEnter()
+        internal void PointerEnter()
         {
             if (CellHighlighted != null)
                 CellHighlighted.Invoke(this, new EventArgs());
         }
-        protected virtual void OnMouseExit()
+        internal void PointerExit()
         {
             if (CellDehighlighted != null)
                 CellDehighlighted.Invoke(this, new EventArgs());
         }
-        void OnMouseDown()
+        internal void PointerDown()
         {
             if (CellClicked != null)
                 CellClicked.Invoke(this, new EventArgs());
@@ -91,7 +92,7 @@ namespace TbsFramework.Cells
         ///<summary>
         ///Method marks the cell as dangerous. It gets called when the mark zone of danger is called by the Cell Grid state, used for the scouting mechanic.
         ///</summary>
-        public abstract void MarkAsDangerous();
+        public abstract void SetDanger(bool isDangerous);
         /// <summary>
         /// Method returns the cell to its base appearance.
         /// </summary>

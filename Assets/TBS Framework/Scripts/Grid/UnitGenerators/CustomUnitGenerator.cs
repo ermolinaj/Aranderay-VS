@@ -21,23 +21,26 @@ namespace TbsFramework.Grid.UnitGenerators
             for (int i = 0; i < UnitsParent.childCount; i++)
             {
                 var unit = UnitsParent.GetChild(i).GetComponent<Unit>();
-                if (unit != null)
-                {
-                    var cell = cells.OrderBy(h => Math.Abs((h.transform.position - unit.transform.position).magnitude)).First();
-                    {
-                        cell.IsTaken = true;
-                        unit.Cell = cell;
-                        cell.CurrentUnit = unit;
-                        unit.transform.position = cell.transform.position;
-                        unit.Initialize();
-                        ret.Add(unit);
-                    }//Unit gets snapped to the nearest cell
-                }
-                else
+                if (unit == null)
                 {
                     Debug.LogError("Invalid object in Units Parent game object");
+                    continue;
                 }
 
+                var cell = cells.Where(c => c.IsWalkable && c.CurrentUnit == null)
+                    .OrderBy(c => (c.transform.position - unit.transform.position).sqrMagnitude).FirstOrDefault();
+                if (cell == null)
+                {
+                    Debug.LogError("No walkable starting cell for " + unit.name, unit);
+                    continue;
+                }
+
+                cell.IsTaken = true;
+                unit.Cell = cell;
+                cell.CurrentUnit = unit;
+                unit.transform.position = cell.transform.position;
+                unit.Initialize();
+                ret.Add(unit);
             }
             return ret;
         }
@@ -57,9 +60,10 @@ namespace TbsFramework.Grid.UnitGenerators
             foreach (Transform unit in UnitsParent)
             {
                 var closestCell = cells.OrderBy(h => Math.Abs((h.transform.position - unit.transform.position).magnitude)).First();
-                if (!closestCell.GetComponent<Cell>().IsTaken)
+                var cell = closestCell.GetComponent<Cell>();
+                if (cell.IsWalkable && !cell.IsTaken)
                 {
-                    Vector3 offset = new Vector3(0, closestCell.GetComponent<Cell>().GetCellDimensions().y, 0);
+                    Vector3 offset = new Vector3(0, cell.GetCellDimensions().y, 0);
                     unit.localPosition = closestCell.transform.localPosition + offset;
                 }//Unit gets snapped to the nearest cell
             }

@@ -26,7 +26,7 @@ namespace TbsFramework.Grid.UnitGenerators
         {
             List<Unit> ret = new List<Unit>();
 
-            List<Cell> freeCells = cells.FindAll(h => h.GetComponent<Cell>().IsTaken == false);
+            List<Cell> freeCells = cells.FindAll(cell => cell.IsWalkable && !cell.IsTaken);
             freeCells = freeCells.OrderBy(h => _rnd.Next()).ToList();
 
             for (int i = 0; i < NumberOfPlayers; i++)
@@ -35,17 +35,17 @@ namespace TbsFramework.Grid.UnitGenerators
                 {
                     var cell = freeCells.ElementAt(0);
                     freeCells.RemoveAt(0);
-                    cell.GetComponent<Cell>().IsTaken = true;
+                    cell.IsTaken = true;
 
-                    var unit = Instantiate(UnitPrefab);
-                    unit.transform.position = cell.transform.position + new Vector3(0, 0, 0);
-                    unit.GetComponent<Unit>().PlayerNumber = i;
-                    unit.GetComponent<Unit>().Cell = cell.GetComponent<Cell>();
-                    unit.GetComponent<Unit>().Initialize();
+                    var unit = Instantiate(UnitPrefab).GetComponent<Unit>();
+                    unit.transform.position = cell.transform.position;
+                    unit.PlayerNumber = i;
+                    unit.Cell = cell;
+                    cell.CurrentUnit = unit;
+                    unit.Initialize();
                     unit.transform.parent = UnitsParent;
 
-
-                    ret.Add(unit.GetComponent<Unit>());
+                    ret.Add(unit);
                 }
             }
             return ret;

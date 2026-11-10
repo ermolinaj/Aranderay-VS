@@ -104,4 +104,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Dialogos/Historia3/DialogScene3 003.unity
     guid: f9d56cfbc36ab8f469e1d749fca16ad7
+  - enabled: 1
+    path: Assets/Scenes/VideoScenes/GameOutro.unity
+    guid: c608bff15084c3347a48f63f4c13f40e
   m_configObjects: {}

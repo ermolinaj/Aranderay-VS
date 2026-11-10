@@ -51,14 +51,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 143599fa3a1931b47963e5f53c2cead0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  brightnessEffect: {fileID: 0}
-  brightnessText: {fileID: 0}
-  brightnessSlider: {fileID: 0}
-  volumeText: {fileID: 0}
-  volumeSlider: {fileID: 0}
-  controllerText: {fileID: 0}
-  controllerSlider: {fileID: 0}
-  invertYToggle: {fileID: 0}
   canUse: 1
-  isMenu: 1
   menuController: {fileID: 0}

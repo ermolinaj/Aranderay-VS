@@ -229,9 +229,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 646062492}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f44dc1f088545b4e98147f756dc0000, type: 3}
+  m_Script: {fileID: 11500000, guid: ca60c77758ccf86419be092f75cc688b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  videoPlayer: {fileID: 2082424936}
+  nextSceneName: MainMenu
 --- !u!1 &860945891
 GameObject:
   m_ObjectHideFlags: 0
@@ -655,7 +657,7 @@ VideoPlayer:
   m_EnabledAudioTracks: 01
   m_DirectAudioMutes: 00
   m_ControlledAudioTrackCount: 1
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_SkipOnDrop: 1
   m_Looping: 0
   m_WaitForFirstFrame: 1

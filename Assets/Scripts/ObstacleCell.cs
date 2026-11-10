@@ -3,6 +3,8 @@ using UnityEngine;
 
 class ObstacleCell : Square
 {
+    public override bool IsWalkable => false;
+
     public override Vector3 GetCellDimensions()
     {
         return GetComponent<Renderer>().bounds.size;
@@ -13,9 +15,8 @@ class ObstacleCell : Square
         GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f);
     }
 
-    public override void MarkAsDangerous()
+    public override void SetDanger(bool isDangerous)
     {
-      
     }
 
     public override void MarkAsPath()

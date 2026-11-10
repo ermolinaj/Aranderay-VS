@@ -38,7 +38,7 @@ namespace TbsFramework.EditorUtils
         }
         public static void ClearScene()
         {
-            var objects = GameObject.FindObjectsOfType<GameObject>();
+            var objects = Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
             var toDestroy = new List<GameObject>();
 
             foreach (var obj in objects)

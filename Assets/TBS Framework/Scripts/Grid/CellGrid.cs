@@ -9,7 +9,6 @@ using TbsFramework.Players;
 using TbsFramework.Units;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Collections;
 
 namespace TbsFramework.Grid
 {
@@ -45,6 +44,9 @@ namespace TbsFramework.Grid
         /// </summary>
         public event EventHandler<UnitCreatedEventArgs> UnitAdded;
 
+        private int? _scoutedPlayerNumber;
+        private HashSet<Cell> _dangerCells = new HashSet<Cell>();
+        private GridPointer _pointer;
         private CellGridState _cellGridState; //The grid delegates some of its behaviours to cellGridState object.
         public CellGridState CellGridState
         {
@@ -91,11 +93,17 @@ namespace TbsFramework.Grid
                 LevelLoading.Invoke(this, new EventArgs());
 
             Initialize();
+            _pointer = new GridPointer(this);
 
             if (LevelLoadingDone != null)
                 LevelLoadingDone.Invoke(this, new EventArgs());
 
             StartGame();
+        }
+
+        private void Update()
+        {
+            _pointer?.Process(Input.mousePosition, Input.GetMouseButtonDown(0));
         }
 
         private void Initialize()
@@ -128,7 +136,8 @@ namespace TbsFramework.Grid
                 cell.CellClicked += OnCellClicked;
                 cell.CellHighlighted += OnCellHighlighted;
                 cell.CellDehighlighted += OnCellDehighlighted;
-                cell.GetComponent<Cell>().GetNeighbours(Cells);
+                if (cell.IsWalkable)
+                    cell.GetNeighbours(Cells);
             }
 
             Units = new List<Unit>();
@@ -164,15 +173,25 @@ namespace TbsFramework.Grid
         }
         private void OnUnitDestroyed(object sender, AttackEventArgs e)
         {
-            Units.Remove(sender as Unit);
-            var totalPlayersAlive = Units.Select(u => u.PlayerNumber).Distinct().ToList(); //Checking if the game is over
-            if (totalPlayersAlive.Count == 1)
-            {
-                CellGridState = new CellGridStateBlockInput(this);
-                GameFinished = true;
-                if (GameFinished == true)
-                    EndGame(Units.First().PlayerNumber);
-            }
+            var unit = (Unit)sender;
+            if (!Units.Remove(unit))
+                return;
+
+            unit.UnitClicked -= OnUnitClicked;
+            unit.UnitDestroyed -= OnUnitDestroyed;
+            unit.UnitMoved -= OnUnitMoved;
+
+            var survivingPlayers = Units.Select(survivor => survivor.PlayerNumber).Distinct().ToList();
+            if (survivingPlayers.Count == 1)
+                EndGame(survivingPlayers[0]);
+            else if (_scoutedPlayerNumber.HasValue)
+                RefreshDangerZone();
+        }
+
+        private void OnUnitMoved(object sender, MovementEventArgs e)
+        {
+            if (_scoutedPlayerNumber.HasValue)
+                RefreshDangerZone();
         }
         /// <summary>
         /// Adds unit to the game
@@ -180,9 +199,11 @@ namespace TbsFramework.Grid
         /// <param name="unit">Unit to add</param>
         public void AddUnit(Transform unit)
         {
-            Units.Add(unit.GetComponent<Unit>());
-            unit.GetComponent<Unit>().UnitClicked += OnUnitClicked;
-            unit.GetComponent<Unit>().UnitDestroyed += OnUnitDestroyed;
+            var addedUnit = unit.GetComponent<Unit>();
+            Units.Add(addedUnit);
+            addedUnit.UnitClicked += OnUnitClicked;
+            addedUnit.UnitDestroyed += OnUnitDestroyed;
+            addedUnit.UnitMoved += OnUnitMoved;
 
             if (UnitAdded != null)
                 UnitAdded.Invoke(this, new UnitCreatedEventArgs(unit));
@@ -205,26 +226,33 @@ namespace TbsFramework.Grid
         /// </summary>
         public void EndTurn()
         {
-            CellGridState = new CellGridStateBlockInput(this);
-            if (Units.Select(u => u.PlayerNumber).Distinct().Count() == 1)
-            {
+            if (CellGridState != null && !(CellGridState is CellGridStateBlockInput))
+                EndTurn(CurrentPlayer);
+        }
+
+        internal void EndTurn(Player player)
+        {
+            if (GameFinished || player == null || player != CurrentPlayer || Units.Exists(unit => unit.IsMoving))
                 return;
-            }
+
+            var survivingPlayers = Players.Where(p => Units.Exists(unit => unit.PlayerNumber == p.PlayerNumber))
+                .OrderBy(p => p.PlayerNumber).ToList();
+            if (survivingPlayers.Count < 2)
+                return;
+
+            var nextPlayer = survivingPlayers.Find(p => p.PlayerNumber > CurrentPlayerNumber) ?? survivingPlayers[0];
+            CellGridState = new CellGridStateBlockInput(this);
 
             Units.FindAll(u => u.PlayerNumber.Equals(CurrentPlayerNumber)).ForEach(u => { u.OnTurnEnd(); });
 
-            CurrentPlayerNumber = (CurrentPlayerNumber + 1) % NumberOfPlayers;
-            while (Units.FindAll(u => u.PlayerNumber.Equals(CurrentPlayerNumber)).Count == 0)
-            {
-                CurrentPlayerNumber = (CurrentPlayerNumber + 1) % NumberOfPlayers;
-            }//Skipping players that are defeated.
+            CurrentPlayerNumber = nextPlayer.PlayerNumber;
 
             if (TurnEnded != null)
                 TurnEnded.Invoke(this, new EventArgs());
 
             Debug.Log(string.Format("Player {0} turn", CurrentPlayerNumber));
             Units.FindAll(u => u.PlayerNumber.Equals(CurrentPlayerNumber)).ForEach(u => { u.OnTurnStart(); });
-            Players.Find(p => p.PlayerNumber.Equals(CurrentPlayerNumber)).Play(this);
+            nextPlayer.Play(this);
         }
 
         public void ResetLevel()
@@ -234,47 +262,74 @@ namespace TbsFramework.Grid
 
         public void LoadNextLevel()
         {
+            if (string.IsNullOrEmpty(NextLevelSceneName))
+                return;
+
+            if (!Application.CanStreamedLevelBeLoaded(NextLevelSceneName))
+            {
+                Debug.LogError($"Level destination '{NextLevelSceneName}' is missing from the build scene list.", this);
+                return;
+            }
+
             SceneManager.LoadScene(NextLevelSceneName);
         }
 
         public void MarkZoneOfDanger(int playerNumber)
         {
-            List<Cell> cellsReachableByEnemy = new List<Cell>();
-            List<Unit> enemyUnits;
-            
-            enemyUnits = Units.FindAll(u => u.PlayerNumber.Equals(playerNumber));
-            foreach (Unit unit in enemyUnits)
+            if (GameFinished || CellGridState == null || CellGridState is CellGridStateBlockInput ||
+                playerNumber == CurrentPlayerNumber)
+                return;
+
+            _scoutedPlayerNumber = _scoutedPlayerNumber == playerNumber ? (int?)null : playerNumber;
+            RefreshDangerZone();
+        }
+
+        private void RefreshDangerZone()
+        {
+            var dangerCells = new HashSet<Cell>();
+            if (_scoutedPlayerNumber.HasValue)
             {
-                cellsReachableByEnemy.AddRange(unit.GetPosibleDestinations(Cells));
+                foreach (var unit in Units)
+                {
+                    if (unit.PlayerNumber == _scoutedPlayerNumber.Value)
+                        dangerCells.UnionWith(unit.GetPosibleDestinations(Cells));
+                }
             }
 
-            foreach (Cell cell in cellsReachableByEnemy)
-                cell.MarkAsDangerous();
+            foreach (var cell in _dangerCells)
+            {
+                if (!dangerCells.Contains(cell))
+                    cell.SetDanger(false);
+            }
+            foreach (var cell in dangerCells)
+            {
+                if (!_dangerCells.Contains(cell))
+                    cell.SetDanger(true);
+            }
+            _dangerCells = dangerCells;
         }
 
         public void EndGame(int playerNumber)
         {
-            Debug.Log("Game Ended");
-            //Text winConText = GameObject.Find("GUICamera/Canvas/GameFinishedMessage").GetComponent<Text>();
+            if (GameFinished)
+                return;
 
-            if (playerNumber == 0)
-            {
+            GameFinished = true;
+            _scoutedPlayerNumber = null;
+            RefreshDangerZone();
+            CellGridState = new CellGridStateBlockInput(this);
+            GameEnded?.Invoke(this, EventArgs.Empty);
 
-                if (NextLevelSceneName == "")
-                {
-                    AudioSource audio = GameObject.Find("AudioManager/WinSound").GetComponent<AudioSource>();
-                    audio.Play(0);
-                    //winConText.text = "You Won!";
-                }
-                else
-                    LoadNextLevel();
-            }                
-            else
+            if (playerNumber == 0 && !string.IsNullOrEmpty(NextLevelSceneName))
             {
-                AudioSource audio = GameObject.Find("AudioManager/LoseSound").GetComponent<AudioSource>();
-                audio.Play(0);
-                //winConText.text = "You Lose!";
-            }                
+                LoadNextLevel();
+                return;
+            }
+
+            string soundName = playerNumber == 0 ? "WinSound" : "LoseSound";
+            var audio = GameObject.Find("AudioManager/" + soundName)?.GetComponent<AudioSource>();
+            if (audio != null)
+                audio.Play();
         }
     }
 }

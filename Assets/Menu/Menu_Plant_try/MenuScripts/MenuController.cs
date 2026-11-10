@@ -1,9 +1,7 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 namespace SpeedTutorMainMenuSystem
 {
@@ -21,6 +19,7 @@ namespace SpeedTutorMainMenuSystem
         private string levelToLoad;
 
         private int menuNumber;
+        private Coroutine confirmation;
         #endregion
 
         #region Menu Dialogs
@@ -63,11 +62,20 @@ namespace SpeedTutorMainMenuSystem
         #endregion
 
         //MAIN SECTION
-        public IEnumerator ConfirmationBox()
+        private void ShowConfirmation()
+        {
+            if (confirmation != null)
+                StopCoroutine(confirmation);
+
+            confirmation = StartCoroutine(ConfirmationBox());
+        }
+
+        private IEnumerator ConfirmationBox()
         {
             confirmationMenu.SetActive(true);
             yield return new WaitForSeconds(2);
             confirmationMenu.SetActive(false);
+            confirmation = null;
         }
 
         private void Update()
@@ -159,6 +167,21 @@ namespace SpeedTutorMainMenuSystem
         }
         #endregion
 
+        internal void LoadPreferences()
+        {
+            brightnessSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat("masterBrightness", defaultBrightness));
+            BrightnessSlider(brightnessSlider.value);
+
+            volumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat("masterVolume", defaultVolume));
+            VolumeSlider(volumeSlider.value);
+
+            controllerSenSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat("masterSen", defaultSen));
+            ControllerSen();
+
+            if (invertYToggle != null)
+                invertYToggle.SetIsOnWithoutNotify(PlayerPrefs.GetInt("masterInvertY", defaultInvertY ? 1 : 0) == 1);
+        }
+
         public void VolumeSlider(float volume)
         {
             AudioListener.volume = volume;
@@ -168,21 +191,21 @@ namespace SpeedTutorMainMenuSystem
         public void VolumeApply()
         {
             PlayerPrefs.SetFloat("masterVolume", AudioListener.volume);
-            Debug.Log(PlayerPrefs.GetFloat("masterVolume"));
-            StartCoroutine(ConfirmationBox());
+            ShowConfirmation();
         }
 
         public void BrightnessSlider(float brightness)
         {
-            brightnessEffect.brightness = brightness;
+            if (brightnessEffect != null)
+                brightnessEffect.brightness = brightness;
+
             brightnessText.text = brightness.ToString("0.0");
         }
 
         public void BrightnessApply()
         {
-            PlayerPrefs.SetFloat("masterBrightness", brightnessEffect.brightness);
-            Debug.Log(PlayerPrefs.GetFloat("masterBrightness"));
-            StartCoroutine(ConfirmationBox());
+            PlayerPrefs.SetFloat("masterBrightness", brightnessSlider.value);
+            ShowConfirmation();
         }
 
         public void ControllerSen()
@@ -193,22 +216,11 @@ namespace SpeedTutorMainMenuSystem
 
         public void GameplayApply()
         {
-            if (invertYToggle.isOn) //Invert Y ON
-            {
-                PlayerPrefs.SetInt("masterInvertY", 1);
-                Debug.Log("Invert" + " " + PlayerPrefs.GetInt("masterInvertY"));
-            }
-
-            else if (!invertYToggle.isOn) //Invert Y OFF
-            {
-                PlayerPrefs.SetInt("masterInvertY", 0);
-                Debug.Log(PlayerPrefs.GetInt("masterInvertY"));
-            }
+            if (invertYToggle != null)
+                PlayerPrefs.SetInt("masterInvertY", invertYToggle.isOn ? 1 : 0);
 
             PlayerPrefs.SetFloat("masterSen", controlSenFloat);
-            Debug.Log("Sensitivity" + " " + PlayerPrefs.GetFloat("masterSen"));
-
-            StartCoroutine(ConfirmationBox());
+            ShowConfirmation();
         }
 
         #region ResetButton
@@ -216,27 +228,25 @@ namespace SpeedTutorMainMenuSystem
         {
             if (GraphicsMenu == "Brightness")
             {
-                brightnessEffect.brightness = defaultBrightness;
-                brightnessSlider.value = defaultBrightness;
-                brightnessText.text = defaultBrightness.ToString("0.0");
+                brightnessSlider.SetValueWithoutNotify(defaultBrightness);
+                BrightnessSlider(brightnessSlider.value);
                 BrightnessApply();
             }
 
             if (GraphicsMenu == "Audio")
             {
-                AudioListener.volume = defaultVolume;
-                volumeSlider.value = defaultVolume;
-                volumeText.text = defaultVolume.ToString("0.0");
+                volumeSlider.SetValueWithoutNotify(defaultVolume);
+                VolumeSlider(volumeSlider.value);
                 VolumeApply();
             }
 
             if (GraphicsMenu == "Graphics")
             {
-                controllerSenText.text = defaultSen.ToString("0");
-                controllerSenSlider.value = defaultSen;
-                controlSenFloat = defaultSen;
+                controllerSenSlider.SetValueWithoutNotify(defaultSen);
+                ControllerSen();
 
-                invertYToggle.isOn = false;
+                if (invertYToggle != null)
+                    invertYToggle.SetIsOnWithoutNotify(defaultInvertY);
 
                 GameplayApply();
             }
@@ -248,8 +258,7 @@ namespace SpeedTutorMainMenuSystem
         {
             if (ButtonType == "Yes")
             {
-                System.Random r = new System.Random();
-                SceneManager.LoadScene(_newGameButtonLevel + r.Next(1, 3).ToString());
+                SceneManager.LoadScene(_newGameButtonLevel + Random.Range(1, 4));
             }
 
             if (ButtonType == "No")

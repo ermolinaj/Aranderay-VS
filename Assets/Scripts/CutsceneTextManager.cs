@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -7,34 +6,31 @@ using UnityEngine.UI;
 
 public class CutsceneTextManager : MonoBehaviour
 {
-    [SerializeField]
-    int sceneNumber;
-    [SerializeField]
-    string nextSceneName;
+    [SerializeField] private TextAsset dialog;
+    [SerializeField] private Text textDialogObject;
+    [SerializeField] private string nextSceneName;
 
-    int currentLineNumber = 0;
-    Text textDialogObject;
-    List<string> availableTextLines = new List<string>();
+    private int currentLineNumber;
+    private readonly List<string> availableTextLines = new List<string>();
+    private bool loadingNextScene;
 
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        textDialogObject = GameObject.Find("DialogText").GetComponent<Text>();
-        SetDialogForScene(sceneNumber);
-        textDialogObject.text = GetLine(currentLineNumber);
-    }
+        if (dialog == null || textDialogObject == null)
+        {
+            Debug.LogError("Assign the dialogue asset and its UI Text in the Inspector.", this);
+            return;
+        }
 
-    public void SetDialogForScene(int sceneNumber)
-    {
-        //string path = Directory.GetCurrentDirectory() + "\\Assets\\DialogText\\DialogScene" + sceneNumber + ".txt";
-        string path = Directory.GetCurrentDirectory() + "\\Aranderay_Data\\Resources\\DialogScene" + sceneNumber + ".txt";
-        string[] logFile = File.ReadAllLines(path);
-        foreach (string s in logFile) availableTextLines.Add(s);
-    }
+        using (var reader = new StringReader(dialog.text))
+        {
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                availableTextLines.Add(line);
+        }
 
-    public string GetLine(int lineNumber)
-    {
-        return availableTextLines[lineNumber];
+        if (availableTextLines.Count > 0)
+            textDialogObject.text = availableTextLines[currentLineNumber];
     }
 
     public void SetNextLine()
@@ -42,24 +38,35 @@ public class CutsceneTextManager : MonoBehaviour
         if (currentLineNumber + 1 < availableTextLines.Count)
         {
             currentLineNumber++;
-            textDialogObject.text = GetLine(currentLineNumber);
+            textDialogObject.text = availableTextLines[currentLineNumber];
         }
         else
+        {
             GoToNextScene();
+        }
     }
 
     public void SetPreviousLine()
     {
-        if (currentLineNumber - 1 >= 0)
+        if (currentLineNumber > 0)
         {
             currentLineNumber--;
-            textDialogObject.text = GetLine(currentLineNumber);
+            textDialogObject.text = availableTextLines[currentLineNumber];
         }
-            
     }
 
     public void GoToNextScene()
     {
+        if (loadingNextScene)
+            return;
+
+        if (string.IsNullOrEmpty(nextSceneName) || !Application.CanStreamedLevelBeLoaded(nextSceneName))
+        {
+            Debug.LogError($"Dialogue destination '{nextSceneName}' is missing from the build scene list.", this);
+            return;
+        }
+
+        loadingNextScene = true;
         SceneManager.LoadScene(nextSceneName);
     }
 }

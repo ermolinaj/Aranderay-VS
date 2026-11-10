@@ -14,110 +14,78 @@ namespace TbsFramework.Players
     /// </summary>
     public class NaiveAiPlayer : Player
     {
-        private CellGrid _cellGrid;
-        private System.Random _rnd;
-
-        public NaiveAiPlayer()
-        {
-            _rnd = new System.Random();
-        }
+        private readonly System.Random _random = new System.Random();
 
         public override void Play(CellGrid cellGrid)
         {
             cellGrid.CellGridState = new CellGridStateBlockInput(cellGrid);
-            _cellGrid = cellGrid;
-
-            StartCoroutine(Play());
-
-            //Coroutine is necessary to allow Unity to run updates on other objects (like UI).
-            //Implementing this with threads would require a lot of modifications in other classes, as Unity API is not thread safe.
+            StartCoroutine(TakeTurn(cellGrid));
         }
-        private IEnumerator Play()
+
+        private IEnumerator TakeTurn(CellGrid cellGrid)
         {
-            var myUnits = _cellGrid.Units.FindAll(u => u.PlayerNumber.Equals(PlayerNumber)).ToList();
-            foreach (var unit in myUnits.OrderByDescending(u => u.Cell.GetNeighbours(_cellGrid.Cells).FindAll(u.IsCellTraversable).Count))
+            var myUnits = cellGrid.Units.Where(unit => unit.PlayerNumber == PlayerNumber)
+                .OrderByDescending(unit => unit.Cell.GetNeighbours(cellGrid.Cells).Count(unit.IsCellTraversable))
+                .ToList();
+            foreach (var unit in myUnits)
             {
-                var enemyUnits = _cellGrid.Units.Except(myUnits).ToList();
-                var unitsInRange = new List<Unit>();
-                foreach (var enemyUnit in enemyUnits)
+                if (cellGrid.GameFinished)
+                    yield break;
+
+                var enemies = cellGrid.Units.FindAll(other => other.PlayerNumber != PlayerNumber);
+                var targets = enemies.FindAll(enemy => unit.IsUnitAttackable(enemy, unit.Cell));
+                if (targets.Count == 0 && unit.MovementPoints > 0 && unit.ActionPoints >= 1)
                 {
-                    if (unit.IsUnitAttackable(enemyUnit, unit.Cell))
+                    var path = ChooseApproach(unit, cellGrid.Cells, enemies);
+                    if (path != null)
                     {
-                        unitsInRange.Add(enemyUnit);
+                        unit.Move(path[0], path);
+                        while (unit.IsMoving)
+                            yield return null;
+                        targets = enemies.FindAll(enemy => unit.IsUnitAttackable(enemy, unit.Cell));
                     }
-                }//Looking for enemies that are in attack range.
-                if (unitsInRange.Count != 0)
-                {
-                    var index = _rnd.Next(0, unitsInRange.Count);
-                    unit.AttackHandler(unitsInRange[index]);
-                    yield return new WaitForSeconds(0.5f);
-                    continue;
-                }//If there is an enemy in range, attack it.
-
-                List<Cell> potentialDestinations = new List<Cell>();
-
-                foreach (var enemyUnit in enemyUnits)
-                {
-                    potentialDestinations.AddRange(_cellGrid.Cells.FindAll(c => unit.IsCellMovableTo(c) && unit.IsUnitAttackable(enemyUnit, c)));
-                }//Making a list of cells that the unit can attack from.
-
-                var notInRange = potentialDestinations.FindAll(c => c.GetDistance(unit.Cell) > unit.MovementPoints);
-                potentialDestinations = potentialDestinations.Except(notInRange).ToList();
-
-                if (potentialDestinations.Count == 0 && notInRange.Count != 0)
-                {
-                    potentialDestinations.Add(notInRange.ElementAt(_rnd.Next(0, notInRange.Count - 1)));
                 }
 
-                potentialDestinations = potentialDestinations.OrderBy(h => _rnd.Next()).ToList();
-                List<Cell> shortestPath = null;
-                foreach (var potentialDestination in potentialDestinations)
+                if (targets.Count > 0)
                 {
-                    var path = unit.FindPath(_cellGrid.Cells, potentialDestination);
-                    if ((shortestPath == null && path.Sum(h => h.MovementCost) > 0) || shortestPath != null && (path.Sum(h => h.MovementCost) < shortestPath.Sum(h => h.MovementCost) && path.Sum(h => h.MovementCost) > 0))
-                        shortestPath = path;
-
-                    var pathCost = path.Sum(h => h.MovementCost);
-                    if (pathCost > 0 && pathCost <= unit.MovementPoints)
-                    {
-                        unit.Move(potentialDestination, path);
-                        while (unit.IsMoving)
-                            yield return 0;
-                        shortestPath = null;
-                        break;
-                    }
-                    yield return 0;
-                }//If there is a path to any cell that the unit can attack from, move there.
-
-                if (shortestPath != null)
+                    unit.AttackHandler(targets[_random.Next(targets.Count)]);
+                    yield return new WaitForSeconds(0.5f);
+                }
+                else
                 {
-                    foreach (var potentialDestination in shortestPath.Intersect(unit.GetAvailableDestinations(_cellGrid.Cells)).OrderByDescending(h => h.GetDistance(unit.Cell)))
-                    {
-                        var path = unit.FindPath(_cellGrid.Cells, potentialDestination);
-                        var pathCost = path.Sum(h => h.MovementCost);
-                        if (pathCost > 0 && pathCost <= unit.MovementPoints)
-                        {
-                            unit.Move(potentialDestination, path);
-                            while (unit.IsMoving)
-                                yield return 0;
-                            break;
-                        }
-                        yield return 0;
-                    }
-                }//If the path cost is greater than unit movement points, move as far as possible.
-
-                foreach (var enemyUnit in enemyUnits)
-                {
-                    var enemyCell = enemyUnit.Cell;
-                    if (unit.IsUnitAttackable(enemyUnit, unit.Cell))
-                    {
-                        unit.AttackHandler(enemyUnit);
-                        yield return new WaitForSeconds(0.5f);
-                        break;
-                    }
-                }//Look for enemies in range and attack.
+                    yield return null;
+                }
             }
-            _cellGrid.EndTurn();
+            cellGrid.EndTurn(this);
+        }
+
+        private List<Cell> ChooseApproach(Unit unit, List<Cell> cells, List<Unit> enemies)
+        {
+            var attackPaths = unit.FindAllPaths(cells)
+                .Where(entry => entry.Value.Count > 0 &&
+                    entry.Value[entry.Value.Count - 1].MovementCost <= unit.MovementPoints &&
+                    unit.IsCellMovableTo(entry.Key) &&
+                    enemies.Any(enemy => unit.IsUnitAttackable(enemy, entry.Key)))
+                .Select(entry => (path: entry.Value, cost: entry.Value.Sum(cell => cell.MovementCost)))
+                .ToList();
+
+            var inRange = attackPaths.FindAll(entry => entry.cost <= unit.MovementPoints);
+            if (inRange.Count > 0)
+                return inRange[_random.Next(inRange.Count)].path;
+
+            var closestPath = attackPaths.OrderBy(entry => entry.cost).FirstOrDefault().path;
+            if (closestPath == null)
+                return null;
+
+            // The path starts at the destination. Keep the steps the unit can take from its end.
+            var remaining = unit.MovementPoints;
+            int index = closestPath.Count;
+            while (index > 0 && closestPath[index - 1].MovementCost <= remaining)
+            {
+                index--;
+                remaining -= closestPath[index].MovementCost;
+            }
+            return closestPath.GetRange(index, closestPath.Count - index);
         }
     }
 }

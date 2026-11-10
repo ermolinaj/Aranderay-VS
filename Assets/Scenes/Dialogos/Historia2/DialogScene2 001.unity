@@ -153,7 +153,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b0b102a23d851241b3cdc0113939914, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneNumber: 6
+  dialog: {fileID: 4900000, guid: 92cfa8933db5f0c4dae0ee93bcf89245, type: 3}
+  textDialogObject: {fileID: 1807433280}
   nextSceneName: Stage4 002
 --- !u!4 &24354374
 Transform:

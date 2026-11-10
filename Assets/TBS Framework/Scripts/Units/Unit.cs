@@ -17,28 +17,23 @@ namespace TbsFramework.Units
     {
         Dictionary<Cell, List<Cell>> cachedPaths = null;
         /// <summary>
-        /// UnitClicked event is invoked when user clicks the unit. 
-        /// It requires a collider on the unit game object to work.
+        /// Invoked when the board pointer clicks this unit.
         /// </summary>
         public event EventHandler UnitClicked;
         /// <summary>
-        /// UnitSelected event is invoked when user clicks on unit that belongs to him. 
-        /// It requires a collider on the unit game object to work.
+        /// Invoked when the active player selects this unit.
         /// </summary>
         public event EventHandler UnitSelected;
         /// <summary>
-        /// UnitDeselected event is invoked when user click outside of currently selected unit's collider.
-        /// It requires a collider on the unit game object to work.
+        /// Invoked when this unit is no longer selected.
         /// </summary>
         public event EventHandler UnitDeselected;
         /// <summary>
-        /// UnitHighlighted event is invoked when user moves cursor over the unit. 
-        /// It requires a collider on the unit game object to work.
+        /// Invoked when the board pointer enters this unit.
         /// </summary>
         public event EventHandler UnitHighlighted;
         /// <summary>
-        /// UnitDehighlighted event is invoked when cursor exits unit's collider. 
-        /// It requires a collider on the unit game object to work.
+        /// Invoked when the board pointer leaves this unit.
         /// </summary>
         public event EventHandler UnitDehighlighted;
         /// <summary>
@@ -156,21 +151,21 @@ namespace TbsFramework.Units
             TotalActionPoints = ActionPoints;
         }
 
-        protected virtual void OnMouseDown()
+        internal void PointerDown()
         {
             if (UnitClicked != null)
             {
                 UnitClicked.Invoke(this, new EventArgs());
             }
         }
-        protected virtual void OnMouseEnter()
+        internal void PointerEnter()
         {
             if (UnitHighlighted != null)
             {
                 UnitHighlighted.Invoke(this, new EventArgs());
             }
         }
-        protected virtual void OnMouseExit()
+        internal void PointerExit()
         {
             if (UnitDehighlighted != null)
             {
@@ -205,7 +200,6 @@ namespace TbsFramework.Units
         /// </summary>
         protected virtual void OnDestroyed()
         {
-            Cell.IsTaken = false;
             MarkAsDestroyed();
             Destroy(gameObject);
         }
@@ -241,8 +235,9 @@ namespace TbsFramework.Units
         /// <returns>Boolean value whether unit can be attacked or not</returns>
         public virtual bool IsUnitAttackable(Unit other, Cell sourceCell)
         {
-            return sourceCell.GetDistance(other.Cell) <= AttackRange
+            return other != null && other.HitPoints > 0
                 && other.PlayerNumber != PlayerNumber
+                && sourceCell.GetDistance(other.Cell) <= AttackRange
                 && ActionPoints >= 1;
         }
 
@@ -251,7 +246,7 @@ namespace TbsFramework.Units
         /// </summary>
         public void AttackHandler(Unit unitToAttack)
         {
-            if (!IsUnitAttackable(unitToAttack, Cell))
+            if (IsMoving || !IsUnitAttackable(unitToAttack, Cell))
             {
                 return;
             }
@@ -261,17 +256,7 @@ namespace TbsFramework.Units
             unitToAttack.DefendHandler(this, attackAction.Damage);
             AttackActionPerformed(attackAction.ActionCost);
 
-            if (PlayerNumber == 0)
-            {
-                AudioSource audio = GameObject.Find("AudioManager/HumanAttack").GetComponent<AudioSource>();
-                audio.Play(0);
-            }
-            else
-            {
-                AudioSource audio = GameObject.Find("AudioManager/CreatureAttack").GetComponent<AudioSource>();
-                audio.Play(0);
-            }
-            
+            PlaySound(PlayerNumber == 0 ? "HumanAttack" : "CreatureAttack");
         }
         /// <summary>
         /// Method for calculating damage and action points cost of attacking given unit
@@ -302,6 +287,9 @@ namespace TbsFramework.Units
         /// <param name="damage">Amount of damge that the attack caused</param>
         public void DefendHandler(Unit aggressor, int damage)
         {
+            if (HitPoints <= 0)
+                return;
+
             MarkAsDefending(aggressor);
             int damageTaken = Defend(aggressor, damage);
             HitPoints -= damageTaken;
@@ -313,6 +301,7 @@ namespace TbsFramework.Units
             }
             if (HitPoints <= 0)
             {
+                ReleaseCell();
                 if (UnitDestroyed != null)
                 {
                     UnitDestroyed.Invoke(this, new AttackEventArgs(aggressor, this, damage));
@@ -342,55 +331,71 @@ namespace TbsFramework.Units
         /// <param name="path">A list of cells, path from source to destination cell</param>
         public virtual void Move(Cell destinationCell, List<Cell> path)
         {
-            var totalMovementCost = path.Sum(h => h.MovementCost);
-            MovementPoints -= totalMovementCost;
+            if (IsMoving || path == null || path.Count == 0 || path[0] != destinationCell ||
+                !IsCellMovableTo(destinationCell) || !path.All(IsCellTraversable))
+                return;
 
-            Cell.IsTaken = false;
-            Cell.CurrentUnit = null;
+            var totalMovementCost = path.Sum(h => h.MovementCost);
+            if (totalMovementCost > MovementPoints)
+                return;
+
+            var originCell = Cell;
+            // Keep the unit's placement relative to the tile, even on a rotated grid.
+            var cellOffset = transform.position - originCell.transform.position;
+            MovementPoints -= totalMovementCost;
+            cachedPaths = null;
+
+            ReleaseCell();
             Cell = destinationCell;
             destinationCell.IsTaken = true;
             destinationCell.CurrentUnit = this;
 
             if (MovementAnimationSpeed > 0)
             {
-                if (PlayerNumber == 0)
-                {
-                    AudioSource audio = GameObject.Find("AudioManager/HumanWalk").GetComponent<AudioSource>();
-                    audio.Play(0);
-                }
-                else
-                {
-                    AudioSource audio = GameObject.Find("AudioManager/CreatureWalk").GetComponent<AudioSource>();
-                    audio.Play(0);
-                }
-                
-                StartCoroutine(MovementAnimation(path));
+                PlaySound(PlayerNumber == 0 ? "HumanWalk" : "CreatureWalk");
+                StartCoroutine(MovementAnimation(path, cellOffset));
             }
             else
             {
-                transform.position = Cell.transform.position;
+                foreach (var cell in path)
+                    RevealOnVisibleCell(cell);
+                transform.position = destinationCell.transform.position + cellOffset;
             }
 
             if (UnitMoved != null)
             {
-                UnitMoved.Invoke(this, new MovementEventArgs(Cell, destinationCell, path));
+                UnitMoved.Invoke(this, new MovementEventArgs(originCell, destinationCell, path));
             }
         }
-        protected virtual IEnumerator MovementAnimation(List<Cell> path)
+
+        private static void PlaySound(string soundName)
+        {
+            var audio = GameObject.Find("AudioManager/" + soundName)?.GetComponent<AudioSource>();
+            if (audio != null)
+                audio.Play();
+        }
+
+        private void RevealOnVisibleCell(Cell cell)
+        {
+            if (cell.gameObject.layer == 0 && gameObject.layer != 0)
+                gameObject.layer = 0;
+        }
+
+        protected virtual IEnumerator MovementAnimation(List<Cell> path, Vector3 cellOffset)
         {
             IsMoving = true;
-            path.Reverse();
-            foreach (var cell in path)
+            // Paths are stored from the destination back to the origin.
+            for (int i = path.Count - 1; i >= 0; i--)
             {
-                Vector3 destination_pos = new Vector3(cell.transform.localPosition.x, cell.transform.localPosition.y, transform.localPosition.z);
-                while (transform.localPosition != destination_pos)
+                var cell = path[i];
+                Vector3 destination = cell.transform.position + cellOffset;
+                RevealOnVisibleCell(cell);
+                while (transform.position != destination)
                 {
-                    if (this.gameObject.layer != 0 && cell.gameObject.layer == 0)
-                        this.gameObject.layer = 0;
-
-                    transform.localPosition = Vector3.MoveTowards(transform.localPosition, destination_pos, Time.deltaTime * MovementAnimationSpeed);
-                    yield return 0;
+                    transform.position = Vector3.MoveTowards(transform.position, destination, Time.deltaTime * MovementAnimationSpeed);
+                    yield return null;
                 }
+                transform.position = destination;
             }
             IsMoving = false;
             OnMoveFinished();
@@ -405,37 +410,21 @@ namespace TbsFramework.Units
         /// </summary>
         public virtual bool IsCellMovableTo(Cell cell)
         {
-            return !cell.IsTaken;
+            return cell.IsWalkable && !cell.IsTaken;
         }
         /// <summary>
         /// Method indicates if unit is capable of moving through cell given as parameter.
         /// </summary>
         public virtual bool IsCellTraversable(Cell cell)
         {
-            return !cell.IsTaken;
+            return cell.IsWalkable && !cell.IsTaken;
         }
         /// <summary>
         /// Method returns all cells that the unit is capable of moving to.
         /// </summary>
         public HashSet<Cell> GetAvailableDestinations(List<Cell> cells)
         {
-            cachedPaths = new Dictionary<Cell, List<Cell>>();
-
-            var paths = CachePaths(cells);
-            foreach (var key in paths.Keys)
-            {
-                if (!IsCellMovableTo(key))
-                {
-                    continue;
-                }
-                var path = paths[key];
-
-                var pathCost = path.Sum(c => c.MovementCost);
-                if (pathCost <= MovementPoints)
-                {
-                    cachedPaths.Add(key, path);
-                }
-            }
+            cachedPaths = GetPathsInRange(cells, MovementPoints);
             return new HashSet<Cell>(cachedPaths.Keys);
         }
         /// <summary>
@@ -443,35 +432,26 @@ namespace TbsFramework.Units
         /// </summary>
         public HashSet<Cell> GetPosibleDestinations(List<Cell> cells)
         {
-            cachedPaths = new Dictionary<Cell, List<Cell>>();
-
-            var paths = CachePaths(cells);
-            foreach (var key in paths.Keys)
-            {
-                if (!IsCellMovableTo(key))
-                {
-                    continue;
-                }
-                var path = paths[key];
-
-                var pathCost = path.Sum(c => c.MovementCost);
-                if (pathCost <= TotalMovementPoints)
-                {
-                    cachedPaths.Add(key, path);
-                }
-            }
-            return new HashSet<Cell>(cachedPaths.Keys);
+            return new HashSet<Cell>(GetPathsInRange(cells, TotalMovementPoints).Keys);
         }
 
-        private Dictionary<Cell, List<Cell>> CachePaths(List<Cell> cells)
+        private Dictionary<Cell, List<Cell>> GetPathsInRange(List<Cell> cells, float movementBudget)
         {
-            var edges = GetGraphEdges(cells);
-            var paths = _pathfinder.findAllPaths(edges, Cell);
-            return paths;
+            return FindAllPaths(cells)
+                .Where(path => IsCellMovableTo(path.Key) && path.Value.Sum(cell => cell.MovementCost) <= movementBudget)
+                .ToDictionary(path => path.Key, path => path.Value);
+        }
+
+        internal Dictionary<Cell, List<Cell>> FindAllPaths(List<Cell> cells)
+        {
+            return _pathfinder.findAllPaths(GetGraphEdges(cells), Cell);
         }
 
         public List<Cell> FindPath(List<Cell> cells, Cell destination)
         {
+            if (Cell.Equals(destination) || !IsCellMovableTo(destination))
+                return new List<Cell>();
+
             if (cachedPaths != null && cachedPaths.ContainsKey(destination))
             {
                 return cachedPaths[destination];
@@ -542,12 +522,17 @@ namespace TbsFramework.Units
         /// </summary>
         public abstract void UnMark();
 
-        [ExecuteInEditMode]
         public void OnDestroy()
         {
-            if (Cell != null)
+            ReleaseCell();
+        }
+
+        private void ReleaseCell()
+        {
+            if (Cell != null && (!Application.isPlaying || Cell.CurrentUnit == this))
             {
                 Cell.IsTaken = false;
+                Cell.CurrentUnit = null;
             }
         }
     }

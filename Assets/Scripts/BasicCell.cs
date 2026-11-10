@@ -3,6 +3,17 @@ using UnityEngine;
 
 class BasicCell : Square
 {
+    private enum Mark
+    {
+        None,
+        Highlighted,
+        Reachable,
+        Path
+    }
+
+    private Mark mark;
+    private bool isDangerous;
+
     public override Vector3 GetCellDimensions()
     {
         return GetComponent<Renderer>().bounds.size;
@@ -10,26 +21,45 @@ class BasicCell : Square
 
     public override void MarkAsHighlighted()
     {
-        GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f);
+        SetMark(Mark.Highlighted);
     }
 
-    public override void MarkAsDangerous()
+    public override void SetDanger(bool isDangerous)
     {
-        GetComponent<Renderer>().material.color = Color.red;
+        this.isDangerous = isDangerous;
+        RefreshColor();
     }
 
     public override void MarkAsPath()
     {
-        GetComponent<Renderer>().material.color = Color.green;
+        SetMark(Mark.Path);
     }
 
     public override void MarkAsReachable()
     {
-        GetComponent<Renderer>().material.color = Color.yellow;
+        SetMark(Mark.Reachable);
     }
 
     public override void UnMark()
     {
-        GetComponent<Renderer>().material.color = Color.white;
+        SetMark(Mark.None);
+    }
+
+    private void SetMark(Mark value)
+    {
+        mark = value;
+        RefreshColor();
+    }
+
+    private void RefreshColor()
+    {
+        Color color = mark switch
+        {
+            Mark.Path => isDangerous ? new Color(1f, 0.55f, 0f) : Color.green,
+            Mark.Reachable => isDangerous ? new Color(1f, 0.25f, 0f) : Color.yellow,
+            Mark.Highlighted => isDangerous ? Color.red : new Color(0.75f, 0.75f, 0.75f),
+            _ => isDangerous ? Color.red : Color.white
+        };
+        GetComponent<Renderer>().material.color = color;
     }
 }

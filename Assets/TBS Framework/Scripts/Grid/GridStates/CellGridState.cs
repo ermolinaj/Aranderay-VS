@@ -20,6 +20,11 @@ namespace TbsFramework.Grid.GridStates
         {
         }
 
+        internal virtual bool PrefersCell(Cell cell, Unit unit)
+        {
+            return false;
+        }
+
         /// <summary>
         /// Method is called when mouse exits cell's collider.
         /// </summary>
